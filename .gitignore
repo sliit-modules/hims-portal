@@ -1,0 +1,31 @@
+# Target / Build artifacts
+target/
+*.class
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+out/
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# VS Code
+.vscode/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# User Uploaded Documents (claim files, receipts)
+uploads/*
+!uploads/.gitkeep
+
+# Sensitive Configuration & Environment Variables (DO NOT COMMIT)
+src/main/resources/application.yml
+.env
+.env.local
+.env.*.local

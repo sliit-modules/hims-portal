@@ -1,0 +1,49 @@
+# ==============================================================================
+# MediSure Lanka Insurance PLC - Health Insurance Management System (HIMS)
+# Example Application Configuration Template
+# ------------------------------------------------------------------------------
+# INSTRUCTIONS:
+# 1. Copy this file to 'src/main/resources/application.yml'
+#    (or configure equivalent system environment variables).
+# 2. Update the database username and password with your local MySQL credentials.
+# 3. 'application.yml' is ignored by Git to protect sensitive credentials.
+# ==============================================================================
+
+server:
+  port: 8080
+
+spring:
+  application:
+    name: hims-portal
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/hims_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:your_mysql_password_here}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: true
+
+  thymeleaf:
+    cache: false
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 25MB
+
+app:
+  # Claim supporting documents are stored in this directory
+  upload-dir: uploads
+
+logging:
+  level:
+    com.medisure.hims: INFO
