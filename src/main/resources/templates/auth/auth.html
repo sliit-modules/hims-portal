@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>MediSure HIMS · Sign in</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+    <link href="/css/auth.css" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- Blurred colour blobs behind the frosted card -->
+<div class="bg-blobs">
+    <span class="blob blob-1"></span>
+    <span class="blob blob-2"></span>
+    <span class="blob blob-3"></span>
+</div>
+
+<div class="auth-stage">
+    <div class="auth-shell" th:classappend="${mode == 'signup'} ? 'panel-active' : ''" id="authShell">
+
+        <!-- ============ SIGN UP (left half) ============ -->
+        <div class="form-pane sign-up-pane">
+            <form th:action="@{/register}" th:object="${user}" method="post" class="auth-form" novalidate>
+                <h2 class="form-title">Create Account</h2>
+                <p class="form-sub">Join MediSure and manage your cover online</p>
+
+                <div class="inline-alert danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+                <div class="inline-alert danger" th:if="${#fields.hasErrors('global')}">
+                    <div th:each="err : ${#fields.errors('global')}" th:text="${err}"></div>
+                </div>
+
+                <div class="field-grid">
+                    <div class="field span-2">
+                        <i class="bi bi-person-vcard"></i>
+                        <input type="text" th:field="*{nic}" maxlength="12" placeholder="NIC (12 digits) — your login" required/>
+                    </div>
+                    <div class="field-error span-2" th:if="${#fields.hasErrors('nic')}" th:errors="*{nic}"></div>
+
+                    <div class="field span-2">
+                        <i class="bi bi-person"></i>
+                        <input type="text" th:field="*{fullName}" placeholder="Full name" required/>
+                    </div>
+                    <div class="field-error span-2" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></div>
+
+                    <div class="field">
+                        <i class="bi bi-calendar-event"></i>
+                        <input type="date" th:field="*{dateOfBirth}" required/>
+                    </div>
+                    <div class="field">
+                        <i class="bi bi-gender-ambiguous"></i>
+                        <select th:field="*{gender}" required>
+                            <option value="">Gender</option>
+                            <option th:each="g : ${T(com.medisure.hims.model.Gender).values()}" th:value="${g}" th:text="${g}"></option>
+                        </select>
+                    </div>
+                    <div class="field-error span-2" th:if="${#fields.hasErrors('dateOfBirth')}" th:errors="*{dateOfBirth}"></div>
+
+                    <div class="field">
+                        <i class="bi bi-droplet-half"></i>
+                        <select th:field="*{bloodGroup}" required>
+                            <option th:each="b : ${T(com.medisure.hims.model.BloodGroup).values()}"
+                                    th:value="${b}" th:text="'Blood: ' + ${b.label}"></option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <i class="bi bi-telephone"></i>
+                        <input type="text" th:field="*{phoneNumber}" placeholder="Phone" required/>
+                    </div>
+                    <div class="field-error span-2" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></div>
+
+                    <div class="field span-2">
+                        <i class="bi bi-geo-alt"></i>
+                        <input type="text" th:field="*{address}" placeholder="Address" required/>
+                    </div>
+                    <div class="field span-2">
+                        <i class="bi bi-envelope"></i>
+                        <input type="email" th:field="*{email}" placeholder="Email" required/>
+                    </div>
+                    <div class="field-error span-2" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+
+                    <div class="field">
+                        <i class="bi bi-lock"></i>
+                        <input type="password" name="password" placeholder="Password" minlength="6" required/>
+                    </div>
+                    <div class="field">
+                        <i class="bi bi-lock-fill"></i>
+                        <input type="password" name="confirmPassword" placeholder="Confirm" minlength="6" required/>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-solid">Sign Up</button>
+                <button type="button" class="link-toggle mobile-only" data-toggle="signin">
+                    Already have an account? <strong>Sign in</strong>
+                </button>
+            </form>
+        </div>
+
+        <!-- ============ SIGN IN (right half) ============ -->
+        <div class="form-pane sign-in-pane">
+            <form th:action="@{/login}" method="post" class="auth-form">
+                <h2 class="form-title">Sign in to MediSure</h2>
+                <p class="form-sub">Health Insurance Management System</p>
+
+                <div class="inline-alert success" th:if="${param.registered}">
+                    Registration successful — please sign in.
+                </div>
+                <div class="inline-alert danger" th:if="${param.error}">
+                    Invalid credentials. Check your NIC/email and password.
+                </div>
+                <div class="inline-alert info" th:if="${param.logout}">You have been signed out.</div>
+
+                <div class="field">
+                    <i class="bi bi-person-badge"></i>
+                    <input type="text" name="identifier" placeholder="NIC (members) or email (staff)" required/>
+                </div>
+                <div class="field">
+                    <i class="bi bi-lock"></i>
+                    <input type="password" name="password" placeholder="Password" required/>
+                </div>
+
+                <span class="muted-note">Members sign in with their NIC · staff with their work email</span>
+
+                <button type="submit" class="btn-solid">Sign In</button>
+                <button type="button" class="link-toggle mobile-only" data-toggle="signup">
+                    New here? <strong>Create an account</strong>
+                </button>
+            </form>
+        </div>
+
+        <!-- ============ Sliding gradient overlay ============ -->
+        <div class="overlay-wrap">
+            <div class="overlay">
+                <!-- Visible while the SIGN IN form is showing, so it invites registration. -->
+                <div class="overlay-pane overlay-left">
+                    <div class="shape s1"></div>
+                    <div class="shape s2"></div>
+                    <div class="brand-badge"><i class="bi bi-shield-plus"></i></div>
+                    <h2>New to MediSure?</h2>
+                    <p>Create your member account to apply for a health plan, cover your family as
+                       dependents, and file claims with supporting documents — tracked end to end.</p>
+                    <button type="button" class="btn-ghost" data-toggle="signup">Sign Up</button>
+                </div>
+                <!-- Visible while the SIGN UP form is showing, so it invites signing in. -->
+                <div class="overlay-pane overlay-right">
+                    <div class="shape s3"></div>
+                    <div class="shape s4"></div>
+                    <div class="brand-badge"><i class="bi bi-shield-plus"></i></div>
+                    <h2>Already Covered?</h2>
+                    <p>Sign in to check your remaining cover, pay premiums, upload claim documents
+                       and follow every settlement as it is processed.</p>
+                    <button type="button" class="btn-ghost" data-toggle="signin">Sign In</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const shell = document.getElementById('authShell');
+    document.querySelectorAll('[data-toggle]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            shell.classList.toggle('panel-active', btn.dataset.toggle === 'signup');
+        });
+    });
+</script>
+</body>
+</html>
