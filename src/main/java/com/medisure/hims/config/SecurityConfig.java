@@ -1,0 +1,79 @@
+package com.medisure.hims.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+public class SecurityConfig {
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/error").permitAll()
+
+                .requestMatchers(HttpMethod.POST, "/plans/**").hasRole("ADMIN")
+                .requestMatchers("/plans/new", "/plans/*/edit").hasRole("ADMIN")
+                .requestMatchers("/plans/**").hasAnyRole("ADMIN", "SALES_AGENT", "UNDERWRITER", "POLICYHOLDER")
+
+                .requestMatchers("/underwriting/*/decide").hasAnyRole("UNDERWRITER", "ADMIN")
+                .requestMatchers("/underwriting/new").hasAnyRole("POLICYHOLDER", "SALES_AGENT", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/underwriting").hasAnyRole("POLICYHOLDER", "SALES_AGENT", "ADMIN")
+                .requestMatchers("/underwriting/**").hasAnyRole("UNDERWRITER", "ADMIN", "SALES_AGENT", "POLICYHOLDER")
+
+                .requestMatchers(HttpMethod.GET, "/policies/**")
+                    .hasAnyRole("SALES_AGENT", "ADMIN", "POLICYHOLDER", "CLAIMS_OFFICER", "CRE")
+                .requestMatchers(HttpMethod.POST, "/policies/**").hasAnyRole("SALES_AGENT", "ADMIN")
+
+                .requestMatchers(HttpMethod.GET, "/claims/**")
+                    .hasAnyRole("CLAIMS_OFFICER", "ADMIN", "POLICYHOLDER", "SALES_AGENT", "CRE")
+                .requestMatchers(HttpMethod.POST, "/claims/new", "/claims").hasAnyRole("POLICYHOLDER", "SALES_AGENT", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/claims/*/status").hasAnyRole("CLAIMS_OFFICER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/claims/*/withdraw").hasAnyRole("POLICYHOLDER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/claims/*/documents/*/delete").hasAnyRole("POLICYHOLDER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/claims/*/documents")
+                    .hasAnyRole("POLICYHOLDER", "SALES_AGENT", "CLAIMS_OFFICER", "ADMIN")
+
+                .requestMatchers(HttpMethod.GET, "/payments/**").hasAnyRole("POLICYHOLDER", "ADMIN", "CLAIMS_OFFICER", "SALES_AGENT")
+                .requestMatchers(HttpMethod.POST, "/payments/**").hasAnyRole("POLICYHOLDER", "ADMIN")
+
+                .requestMatchers("/tickets/**")
+                    .hasAnyRole("CRE", "ADMIN", "POLICYHOLDER", "SALES_AGENT", "CLAIMS_OFFICER", "UNDERWRITER")
+
+                .requestMatchers("/members/**")
+                    .hasAnyRole("ADMIN", "SALES_AGENT", "UNDERWRITER", "CLAIMS_OFFICER", "POLICYHOLDER")
+
+                .requestMatchers("/audit/**").hasRole("ADMIN")
+                .requestMatchers("/users/**").hasRole("ADMIN")
+
+                .anyRequest().authenticated()
+            )
+            .formLogin(form -> form
+                .loginPage("/login")
+                .usernameParameter("identifier")
+                .defaultSuccessUrl("/dashboard", true)
+                .permitAll()
+            )
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login?logout")
+                .permitAll()
+            );
+
+        return http.build();
+    }
+}
