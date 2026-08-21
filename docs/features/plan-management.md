@@ -11,3 +11,7 @@
 ### [PBI18] Plan Catalog & Browsing Interface
 - Developed PlanController and Thymeleaf views (list.html, iew.html, orm.html).
 - Added filtering by active status and plan type.
+
+### [PBI19] Premium Rate & Coverage Limit Updates
+- Implemented update method in PlanService with audit trail integration.
+- Added validation for non-negative premium rates and maximum coverage limits.
