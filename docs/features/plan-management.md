@@ -15,3 +15,7 @@
 ### [PBI19] Premium Rate & Coverage Limit Updates
 - Implemented update method in PlanService with audit trail integration.
 - Added validation for non-negative premium rates and maximum coverage limits.
+
+### [PBI20] Plan Discontinuation & Archival
+- Added safe discontinuation logic setting plan status to DISCONTINUED.
+- Preserved historical plan references for existing active policies.
