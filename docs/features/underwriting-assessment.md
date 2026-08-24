@@ -7,3 +7,7 @@
 ### [PBI09] Underwriting Application Submission
 - Implemented applicant medical questionnaire and intake form (orm.html).
 - Created UnderwritingApplication model linked to user and chosen plan.
+
+### [PBI10] Automated Risk Scoring Engine
+- Implemented risk assessment calculation based on BMI, age, and pre-existing medical conditions.
+- Displayed risk score tiers (Low, Medium, High) in assessment dashboard.
