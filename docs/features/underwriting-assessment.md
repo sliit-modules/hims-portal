@@ -11,3 +11,7 @@
 ### [PBI10] Automated Risk Scoring Engine
 - Implemented risk assessment calculation based on BMI, age, and pre-existing medical conditions.
 - Displayed risk score tiers (Low, Medium, High) in assessment dashboard.
+
+### [PBI11] Underwriting Decision & Premium Loading
+- Created decision approval workflow with loading percentage adjustments.
+- Stored decision notes and transitioned status to APPROVED for policy issuance.

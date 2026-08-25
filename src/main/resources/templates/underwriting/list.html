@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(title='Underwriting Applications')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+    <main class="content">
+        <div class="page-header d-flex justify-content-between align-items-end">
+            <div>
+                <h3>Underwriting Applications</h3>
+                <div class="subtitle">Risk review queue from application to decision</div>
+            </div>
+            <a href="/underwriting/new" class="btn btn-primary" sec:authorize="hasAnyRole('POLICYHOLDER','SALES_AGENT','ADMIN')"><i class="bi bi-plus-lg"></i>New Application</a>
+        </div>
+        <div class="table-card">
+            <table class="table table-hover">
+                <thead><tr><th>Code</th><th>Applicant</th><th>Plan</th><th>Age</th><th>Risk Score</th><th>Decision</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="app : ${applications}">
+                    <td class="fw-semibold" th:text="${app.applicationCode}">APP</td>
+                    <td th:text="${app.applicant.fullName}">Name</td>
+                    <td th:text="${app.requestedPlan.planName}">Plan</td>
+                    <td th:text="${app.applicantAge}">0</td>
+                    <td th:text="${app.riskScore ?: '-'}">-</td>
+                    <td>
+                        <span class="pill"
+                              th:classappend="${app.decision.name() == 'APPROVED'} ? 'pill-success' : (${app.decision.name() == 'REJECTED'} ? 'pill-danger' : 'pill-warning')"
+                              th:text="${app.decision}">PENDING</span>
+                    </td>
+                    <td><a th:href="@{'/underwriting/' + ${app.id}}" class="btn btn-sm btn-outline-primary">View</a></td>
+                </tr>
+                </tbody>
+            </table>
+            <div th:if="${#lists.isEmpty(applications)}" class="empty-state"><i class="bi bi-file-earmark-medical"></i>No applications yet.</div>
+        </div>
+    </main>
+</div>
+</body>
+</html>
