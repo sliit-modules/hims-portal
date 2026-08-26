@@ -15,3 +15,7 @@
 ### [PBI11] Underwriting Decision & Premium Loading
 - Created decision approval workflow with loading percentage adjustments.
 - Stored decision notes and transitioned status to APPROVED for policy issuance.
+
+### [PBI12] High-Risk Application Rejection & Withdrawal
+- Implemented application rejection logic with mandatory justification recording.
+- Integrated customer notification triggers for rejected submissions.
