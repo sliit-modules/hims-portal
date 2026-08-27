@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title='New Application')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+    <main class="content" style="max-width:600px;">
+        <h3 class="mb-3">Underwriting Application</h3>
+        <form th:action="@{/underwriting}" method="post" class="card p-4">
+            <div class="mb-2" th:if="${isAgent}">
+                <label class="form-label">Applicant NIC (leave blank to apply for yourself)</label>
+                <input type="text" name="applicantNic" class="form-control" maxlength="12" placeholder="200412345678"/>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Requested Plan</label>
+                <select name="planId" class="form-select" required>
+                    <option th:each="p : ${plans}" th:value="${p.id}" th:text="${p.planName} + ' (' + ${p.planType} + ')'"></option>
+                </select>
+            </div>
+            <div class="mb-2 form-check">
+                <input type="checkbox" name="hasPreExistingConditions" class="form-check-input" value="true"/>
+                <label class="form-check-label">Applicant has pre-existing medical conditions</label>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Condition Notes (if any)</label>
+                <textarea name="conditionsNotes" class="form-control" rows="2"></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Number of Dependents Planned</label>
+                <input type="number" name="numDependentsPlanned" class="form-control" min="0" value="0"/>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit Application</button>
+            <a href="/underwriting" class="btn btn-link">Cancel</a>
+        </form>
+    </main>
+</div>
+</body>
+</html>
