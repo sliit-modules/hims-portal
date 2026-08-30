@@ -11,3 +11,7 @@
 ### [PBI02] Policy Inspection & Certificate View
 - Developed policy list and details template (policies/view.html, policies/issue.html).
 - Added printable policy schedule showing covered dependents, benefits, and deductibles.
+
+### [PBI03] Annual Policy Renewal & Coverage Modification
+- Added policy renewal logic extending policy validity period by 12 months.
+- Enabled Sales Agents to add/remove dependents during the policy modification window.
