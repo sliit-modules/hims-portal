@@ -15,3 +15,7 @@
 ### [PBI03] Annual Policy Renewal & Coverage Modification
 - Added policy renewal logic extending policy validity period by 12 months.
 - Enabled Sales Agents to add/remove dependents during the policy modification window.
+
+### [PBI04] Policy Cancellation & Termination Handling
+- Implemented policy cancellation transition setting status to CANCELLED.
+- Added termination audit logging and deactivated pending claims checks.
