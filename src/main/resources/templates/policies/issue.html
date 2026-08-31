@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title='Issue Policy')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+    <main class="content" style="max-width:600px;">
+        <h3 class="mb-3">Issue Policy from <span th:text="${application.applicationCode}"></span></h3>
+        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+        <div class="card p-3 mb-3">
+            <dl class="row mb-0">
+                <dt class="col-sm-5">Policyholder</dt><dd class="col-sm-7" th:text="${application.applicant.fullName}"></dd>
+                <dt class="col-sm-5">Plan</dt><dd class="col-sm-7" th:text="${application.requestedPlan.planName}"></dd>
+                <dt class="col-sm-5">Base Premium Rate</dt><dd class="col-sm-7" th:text="${application.requestedPlan.premiumRate}"></dd>
+                <dt class="col-sm-5">Premium Loading</dt><dd class="col-sm-7" th:text="${application.premiumLoadingPercent} + '%'"></dd>
+            </dl>
+        </div>
+        <form th:action="@{'/policies/issue/' + ${application.id}}" method="post" class="card p-4">
+            <div class="mb-3">
+                <label class="form-label">Premium Billing Frequency</label>
+                <select name="premiumFrequency" class="form-select" required>
+                    <option th:each="f : ${frequencies}" th:value="${f}" th:text="${f}"></option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-success">Issue Policy</button>
+            <a th:href="@{'/underwriting/' + ${application.id}}" class="btn btn-link">Cancel</a>
+        </form>
+    </main>
+</div>
+</body>
+</html>
