@@ -7,3 +7,7 @@
 ### [PBI13] Online Premium Payment Checkout
 - Implemented premium payment form (payments/form.html) with payment method selection.
 - Created PaymentService.pay() simulating transaction gateway response and receipt number.
+
+### [PBI14] Payment History & Printable Receipts
+- Built payment transaction history view with status badges (SUCCESS, FAILED, REFUNDED).
+- Implemented downloadable/printable receipt summary template (payments/view.html).
