@@ -15,3 +15,7 @@
 ### [PBI15] Auto-Pay Settings & Recurring Schedules
 - Added auto-pay preference configuration on policyholder profile.
 - Simulated scheduled monthly/quarterly premium deductions.
+
+### [PBI16] Payment Refund & Transaction Voiding
+- Implemented payment refund processing for duplicate or overcharged transactions.
+- Updated policy active status and logged financial refund audit entry.
