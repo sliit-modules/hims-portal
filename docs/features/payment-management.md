@@ -11,3 +11,7 @@
 ### [PBI14] Payment History & Printable Receipts
 - Built payment transaction history view with status badges (SUCCESS, FAILED, REFUNDED).
 - Implemented downloadable/printable receipt summary template (payments/view.html).
+
+### [PBI15] Auto-Pay Settings & Recurring Schedules
+- Added auto-pay preference configuration on policyholder profile.
+- Simulated scheduled monthly/quarterly premium deductions.
