@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title='Claims')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+    <main class="content">
+        <div class="page-header">
+            <h3>Claims</h3>
+            <div class="subtitle">Every claim filed against a policy</div>
+        </div>
+        <div class="table-card">
+            <table class="table table-hover">
+                <thead><tr><th>Code</th><th>Policy</th><th>Claimant</th><th>Hospital</th><th>Amount</th><th>Docs</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="claim : ${claims}">
+                    <td class="fw-semibold" th:text="${claim.claimCode}">CLM</td>
+                    <td th:text="${claim.policy.policyCode}">POL</td>
+                    <td th:text="${claim.claimantDependent != null ? claim.claimantDependent.fullName + ' (dependent)' : claim.claimant.fullName}">Name</td>
+                    <td th:text="${claim.hospitalName}">-</td>
+                    <td th:text="'LKR ' + ${claim.amountClaimed}">0.00</td>
+                    <td th:with="docs=${docCounts.containsKey(claim.id)} ? ${docCounts.get(claim.id)} : 0">
+                        <span class="pill" th:classappend="${docs > 0} ? 'pill-info' : 'pill-neutral'">
+                            <i class="bi bi-paperclip"></i><span th:text="${docs}">0</span>
+                        </span>
+                    </td>
+                    <td>
+                        <span class="pill"
+                              th:classappend="${claim.status.name() == 'APPROVED'} ? 'pill-success' : (${claim.status.name() == 'REJECTED'} ? 'pill-danger' : (${claim.status.name() == 'WITHDRAWN'} ? 'pill-neutral' : 'pill-warning'))"
+                              th:text="${claim.status}">SUBMITTED</span>
+                    </td>
+                    <td><a th:href="@{'/claims/' + ${claim.id}}" class="btn btn-sm btn-outline-primary">View</a></td>
+                </tr>
+                </tbody>
+            </table>
+            <div th:if="${#lists.isEmpty(claims)}" class="empty-state"><i class="bi bi-hospital"></i>No claims yet.</div>
+        </div>
+    </main>
+</div>
+</body>
+</html>
