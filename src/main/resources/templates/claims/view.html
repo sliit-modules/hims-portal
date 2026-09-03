@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(title='Claim Details')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+    <main class="content" style="max-width:860px;">
+        <div class="page-header d-flex justify-content-between align-items-start">
+            <div>
+                <h3 th:text="${claim.claimCode}">CLM</h3>
+                <div class="subtitle" th:text="${claim.category.label} + ' · ' + ${claim.hospitalName}">Category</div>
+            </div>
+            <span class="pill"
+                  th:classappend="${claim.status.name() == 'APPROVED'} ? 'pill-success' : (${claim.status.name() == 'REJECTED'} ? 'pill-danger' : (${claim.status.name() == 'WITHDRAWN'} ? 'pill-neutral' : 'pill-warning'))"
+                  th:text="${claim.status}">SUBMITTED</span>
+        </div>
+        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+        <div class="section-card mb-3">
+            <h6><i class="bi bi-file-medical"></i> Claim Details</h6>
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Policy</dt><dd class="col-sm-8" th:text="${claim.policy.policyCode}"></dd>
+                <dt class="col-sm-4">Treated Member</dt>
+                <dd class="col-sm-8" th:text="${claim.claimantDependent != null ? claim.claimantDependent.fullName + ' (' + claim.claimantDependent.relationship + ')' : claim.claimant.fullName + ' (policyholder)'}"></dd>
+                <dt class="col-sm-4">Blood Group</dt>
+                <dd class="col-sm-8" th:text="${claim.claimantDependent != null ? claim.claimantDependent.bloodGroup.label : claim.claimant.bloodGroup.label}">-</dd>
+                <dt class="col-sm-4">Category</dt><dd class="col-sm-8"><span class="pill pill-brand" th:text="${claim.category.label}">Category</span></dd>
+                <dt class="col-sm-4">Hospital</dt><dd class="col-sm-8" th:text="${claim.hospitalName}"></dd>
+                <dt class="col-sm-4">Treatment Date</dt><dd class="col-sm-8" th:text="${claim.treatmentDate}"></dd>
+                <dt class="col-sm-4">Diagnosis</dt><dd class="col-sm-8" th:text="${claim.diagnosisSummary}"></dd>
+                <dt class="col-sm-4">Amount Claimed</dt>
+                <dd class="col-sm-8 fw-bold" th:text="'LKR ' + ${#numbers.formatDecimal(claim.amountClaimed,0,'COMMA',2,'POINT')}"></dd>
+                <dt class="col-sm-4">Submitted</dt><dd class="col-sm-8" th:text="${#temporals.format(claim.submittedAt,'MMM d, yyyy HH:mm')}"></dd>
+                <dt class="col-sm-4" th:if="${claim.decisionNotes}">Decision Notes</dt>
+                <dd class="col-sm-8" th:if="${claim.decisionNotes}" th:text="${claim.decisionNotes}"></dd>
+            </dl>
+        </div>
+
+        <!-- ---------------- Supporting documents ---------------- -->
+        <div class="section-card mb-3">
+            <h6>
+                <i class="bi bi-paperclip"></i> Supporting Documents
+                <span class="pill pill-neutral ms-2" th:text="${#lists.size(documents)}">0</span>
+            </h6>
+
+            <div th:if="${#lists.isEmpty(documents)}" class="empty-state py-3">
+                <i class="bi bi-file-earmark-x"></i>No documents attached to this claim yet.
+            </div>
+
+            <div th:each="doc : ${documents}" class="list-row">
+                <div class="avatar avatar-sm"
+                     th:classappend="${doc.pdf} ? 'avatar-c3' : 'avatar-c4'">
+                    <i class="bi" th:classappend="${doc.pdf} ? 'bi-file-earmark-pdf' : 'bi-file-earmark-image'"></i>
+                </div>
+                <div class="grow">
+                    <div class="primary text-truncate" th:text="${doc.originalFileName}">file.pdf</div>
+                    <div class="secondary">
+                        <span th:text="${doc.readableSize}">0 KB</span> ·
+                        uploaded by <span th:text="${doc.uploadedBy != null ? doc.uploadedBy.fullName : 'member'}">who</span> ·
+                        <span th:text="${#temporals.format(doc.uploadedAt,'MMM d, yyyy')}">date</span>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a th:href="@{'/claims/' + ${claim.id} + '/documents/' + ${doc.id}}" target="_blank"
+                       class="btn btn-sm btn-outline-primary" title="View">
+                        <i class="bi bi-eye"></i>View
+                    </a>
+                    <a th:href="@{'/claims/' + ${claim.id} + '/documents/' + ${doc.id}(download=true)}"
+                       class="btn btn-sm btn-outline-secondary" title="Download">
+                        <i class="bi bi-download"></i>
+                    </a>
+                    <form th:if="${claim.status.name() == 'SUBMITTED'}"
+                          th:action="@{'/claims/' + ${claim.id} + '/documents/' + ${doc.id} + '/delete'}"
+                          method="post" class="d-inline" sec:authorize="hasAnyRole('POLICYHOLDER','ADMIN')">
+                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                onclick="return confirm('Remove this document?');"><i class="bi bi-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+
+            <div th:if="${claim.status.name() == 'SUBMITTED'}" class="divider"></div>
+            <form th:if="${claim.status.name() == 'SUBMITTED'}"
+                  th:action="@{'/claims/' + ${claim.id} + '/documents'}" method="post"
+                  enctype="multipart/form-data" class="row g-2 align-items-end">
+                <div class="col-md-9">
+                    <label class="form-label">Add more documents</label>
+                    <input type="file" name="documents" class="form-control" multiple required
+                           accept="application/pdf,image/jpeg,image/png"/>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100"><i class="bi bi-upload"></i>Upload</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ---------------- Officer decision ---------------- -->
+        <div sec:authorize="hasAnyRole('CLAIMS_OFFICER','ADMIN')" th:if="${claim.status.name() == 'SUBMITTED'}"
+             class="section-card mb-3">
+            <h6><i class="bi bi-clipboard2-check"></i> Process Claim</h6>
+            <p class="text-muted-soft" style="font-size:0.82rem;" th:if="${#lists.isEmpty(documents)}">
+                <i class="bi bi-exclamation-triangle text-warning"></i>
+                No supporting documents were attached — consider requesting them before approving.
+            </p>
+            <form th:action="@{'/claims/' + ${claim.id} + '/status'}" method="post" class="row g-2">
+                <div class="col-md-4">
+                    <select name="status" class="form-select" required>
+                        <option value="APPROVED">Approve</option>
+                        <option value="REJECTED">Reject</option>
+                    </select>
+                </div>
+                <div class="col-md-6"><input type="text" name="notes" class="form-control" placeholder="Decision notes (optional)"/></div>
+                <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Submit</button></div>
+            </form>
+        </div>
+
+        <div sec:authorize="hasRole('POLICYHOLDER')" th:if="${claim.status.name() == 'SUBMITTED'}">
+            <form th:action="@{'/claims/' + ${claim.id} + '/withdraw'}" method="post">
+                <button type="submit" class="btn btn-outline-secondary"
+                        onclick="return confirm('Withdraw this claim?');">
+                    <i class="bi bi-arrow-counterclockwise"></i>Withdraw Claim
+                </button>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>
