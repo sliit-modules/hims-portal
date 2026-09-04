@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(title='Dashboard')}"></head>
+<body>
+<script>
+    const PALETTE = ['#2563eb', '#0d9488', '#7c3aed', '#d97706', '#0891b2', '#dc2626', '#16a34a', '#64748b'];
+
+    function renderBar(id, labels, values, label) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        new Chart(el, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{ label: label, data: values, backgroundColor: '#2563eb', borderRadius: 6, maxBarThickness: 34 }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, border: { display: false }, grid: { color: '#eef2f7' },
+                         ticks: { font: { size: 11 }, color: '#94a3b8' } },
+                    x: { grid: { display: false }, border: { display: false },
+                         ticks: { font: { size: 11 }, color: '#94a3b8' } }
+                }
+            }
+        });
+    }
+
+    function renderLine(id, labels, values, label) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const ctx = el.getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+        gradient.addColorStop(0, 'rgba(37,99,235,0.28)');
+        gradient.addColorStop(1, 'rgba(37,99,235,0)');
+        new Chart(el, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: label, data: values, borderColor: '#2563eb', backgroundColor: gradient,
+                    fill: true, tension: 0.4, borderWidth: 2.5,
+                    pointRadius: 3, pointBackgroundColor: '#2563eb', pointBorderColor: '#fff', pointBorderWidth: 2
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, border: { display: false }, grid: { color: '#eef2f7' },
+                         ticks: { font: { size: 11 }, color: '#94a3b8' } },
+                    x: { grid: { display: false }, border: { display: false },
+                         ticks: { font: { size: 11 }, color: '#94a3b8' } }
+                }
+            }
+        });
+    }
+
+    function renderDonut(id, labels, values, colors) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        new Chart(el, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{ data: values, backgroundColor: colors || PALETTE, borderWidth: 0, hoverOffset: 6 }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                cutout: '66%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { boxWidth: 8, boxHeight: 8, usePointStyle: true, pointStyle: 'circle',
+                                  font: { size: 11 }, color: '#64748b', padding: 12 }
+                    }
+                }
+            }
+        });
+    }
+</script>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+    <main class="content">
+        <div class="page-header d-flex justify-content-between align-items-end flex-wrap gap-2">
+            <div>
+                <h3>Welcome back, <span th:text="${user.fullName}">Name</span></h3>
+                <div class="subtitle">Here is what is happening across MediSure today</div>
+            </div>
+            <span class="pill pill-brand" th:text="${user.role}">ROLE</span>
+        </div>
+
+        <!-- ============================== ADMIN ============================== -->
+        <div sec:authorize="hasRole('ADMIN')">
+            <div class="stat-grid mb-3">
+                <div class="stat-card tone-brand">
+                    <div class="stat-icon"><i class="bi bi-clipboard2-pulse"></i></div>
+                    <div class="stat-value" th:text="${planCount}">0</div>
+                    <div class="stat-label">Insurance Plans</div>
+                </div>
+                <div class="stat-card tone-info">
+                    <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
+                    <div class="stat-value" th:text="${policyCount}">0</div>
+                    <div class="stat-label">Active Policies</div>
+                </div>
+                <div class="stat-card tone-violet">
+                    <div class="stat-icon"><i class="bi bi-people"></i></div>
+                    <div class="stat-value" th:text="${policyholderCount}">0</div>
+                    <div class="stat-label">Members Enrolled</div>
+                </div>
+                <div class="stat-card tone-success">
+                    <div class="stat-icon"><i class="bi bi-cash-coin"></i></div>
+                    <div class="stat-value">LKR <span th:text="${#numbers.formatDecimal(totalCollected,0,'COMMA',0,'POINT')}">0</span></div>
+                    <div class="stat-label">Premiums Collected</div>
+                </div>
+                <div class="stat-card tone-warning">
+                    <div class="stat-icon"><i class="bi bi-headset"></i></div>
+                    <div class="stat-value" th:text="${openTickets}">0</div>
+                    <div class="stat-label">Open Tickets</div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-xl-5">
+                    <div class="hero-card">
+                        <div class="hero-badge"><i class="bi bi-hospital"></i></div>
+                        <div class="hero-label">Total Claims</div>
+                        <div class="hero-value" th:text="${#numbers.formatInteger(totalClaims,1,'COMMA')}">0</div>
+                        <div class="hero-chips">
+                            <div class="hero-chip"><span class="k">Pending</span><span class="v" th:text="${claimsSubmitted}">0</span></div>
+                            <div class="hero-chip"><span class="k">Approved</span><span class="v" th:text="${claimsApproved}">0</span></div>
+                            <div class="hero-chip"><span class="k">Denied</span><span class="v" th:text="${claimsRejected}">0</span></div>
+                        </div>
+                        <div class="hero-foot">
+                            <div>
+                                <span class="k">Total settled</span>
+                                <span class="v">LKR <span th:text="${#numbers.formatDecimal(totalPaidOut,0,'COMMA',0,'POINT')}">0</span></span>
+                            </div>
+                            <div>
+                                <span class="k">Withdrawn</span>
+                                <span class="v" th:text="${claimsWithdrawn}">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3">
+                    <div class="panel h-100">
+                        <div class="panel-title">Portfolio Health</div>
+                        <div class="ring-row">
+                            <div class="ring-wrap">
+                                <div class="ring" th:style="'--pct:' + ${approvalRate} + ';--ring-color:#16a34a'">
+                                    <span class="ring-value" th:text="${approvalRate} + '%'">0%</span>
+                                </div>
+                                <div class="ring-label">Claim Approval</div>
+                            </div>
+                            <div class="ring-wrap">
+                                <div class="ring" th:style="'--pct:' + ${collectionRate} + ';--ring-color:#2563eb'">
+                                    <span class="ring-value" th:text="${collectionRate} + '%'">0%</span>
+                                </div>
+                                <div class="ring-label">Premiums On Time</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4">
+                    <div class="panel h-100">
+                        <div class="panel-title">Recent Claims <a href="/claims" class="sub">View all</a></div>
+                        <div th:if="${#lists.isEmpty(recentClaims)}" class="empty-state"><i class="bi bi-inbox"></i>No claims yet.</div>
+                        <div th:each="c : ${recentClaims}" class="list-row">
+                            <div class="avatar avatar-sm" th:classappend="'avatar-c' + ${c.claimant.avatarTone}"
+                                 th:text="${c.claimant.initials}">KP</div>
+                            <div class="grow">
+                                <div class="primary text-truncate" th:text="${c.claimant.fullName}">Name</div>
+                                <div class="secondary text-truncate" th:text="${c.category.label}">Category</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="amount" th:text="'LKR ' + ${#numbers.formatDecimal(c.amountClaimed,0,'COMMA',0,'POINT')}">0</div>
+                                <span class="pill"
+                                      th:classappend="${c.status.name() == 'APPROVED'} ? 'pill-success' : (${c.status.name() == 'REJECTED'} ? 'pill-danger' : (${c.status.name() == 'WITHDRAWN'} ? 'pill-neutral' : 'pill-warning'))"
+                                      th:text="${c.status}">STATUS</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-xl-8">
+                    <div class="panel h-100">
+                        <div class="panel-title">Claims Overview <span class="sub">Last 12 months</span></div>
+                        <div class="chart-box"><canvas id="adminClaimsBar"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-xl-4">
+                    <div class="panel h-100">
+                        <div class="panel-title">Claim Categories</div>
+                        <div class="chart-box"><canvas id="adminCategoryDonut"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-xl-8">
+                    <div class="panel h-100">
+                        <div class="panel-title">Premium Collection <span class="sub">LKR, last 12 months</span></div>
+                        <div class="chart-box"><canvas id="adminPremiumLine"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-xl-4">
+                    <div class="panel h-100">
+                        <div class="panel-title">Recent Activity <a href="/audit" class="sub">Audit log</a></div>
+                        <div th:each="log : ${recentActivity}" class="list-row">
+                            <div class="avatar avatar-sm avatar-c2" th:if="${log.performedBy != null}"
+                                 th:classappend="'avatar-c' + ${log.performedBy.avatarTone}"
+                                 th:text="${log.performedBy.initials}">SY</div>
+                            <div class="grow">
+                                <div class="primary text-truncate" th:text="${log.entityType} + ' · ' + ${log.action}">Action</div>
+                                <div class="secondary text-truncate" th:text="${log.performedBy != null ? log.performedBy.fullName : 'system'}">Who</div>
+                            </div>
+                            <div class="secondary" style="white-space:nowrap;" th:text="${#temporals.format(log.timestamp,'MMM d')}">date</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script th:inline="javascript">
+                const adminMonths = [[${monthLabels}]];
+                const adminClaims = [[${claimsByMonth}]];
+                const adminPremiums = [[${premiumsByMonth}]];
+                const adminCatLabels = [[${categoryLabels}]];
+                const adminCatValues = [[${categoryValues}]];
+                renderBar('adminClaimsBar', adminMonths, adminClaims, 'Claims');
+                renderDonut('adminCategoryDonut', adminCatLabels, adminCatValues);
+                renderLine('adminPremiumLine', adminMonths, adminPremiums, 'Premiums');
+            </script>
+        </div>
+
+        <!-- ============================== SALES AGENT ============================== -->
+        <div sec:authorize="hasRole('SALES_AGENT')">
+            <div class="stat-grid mb-3">
+                <div class="stat-card tone-brand"><div class="stat-icon"><i class="bi bi-clipboard2-pulse"></i></div><div class="stat-value" th:text="${activePlans}">0</div><div class="stat-label">Active Plans</div></div>
+                <div class="stat-card tone-warning"><div class="stat-icon"><i class="bi bi-hourglass-split"></i></div><div class="stat-value" th:text="${#lists.size(readyToIssue)}">0</div><div class="stat-label">Ready to Issue</div></div>
+                <div class="stat-card tone-info"><div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div><div class="stat-value" th:text="${policyCount}">0</div><div class="stat-label">Policies Issued</div></div>
+                <div class="stat-card tone-violet"><div class="stat-icon"><i class="bi bi-people"></i></div><div class="stat-value" th:text="${policyholderCount}">0</div><div class="stat-label">Members</div></div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-xl-5">
+                    <div class="hero-card">
+                        <div class="hero-badge"><i class="bi bi-graph-up-arrow"></i></div>
+                        <div class="hero-label">Monthly Book Value</div>
+                        <div class="hero-value">LKR <span th:text="${#numbers.formatDecimal(bookValue,0,'COMMA',0,'POINT')}">0</span></div>
+                        <div class="hero-chips">
+                            <div class="hero-chip"><span class="k">Policies</span><span class="v" th:text="${policyCount}">0</span></div>
+                            <div class="hero-chip"><span class="k">Active</span><span class="v" th:text="${activeRate} + '%'">0%</span></div>
+                            <div class="hero-chip"><span class="k">Converted</span><span class="v" th:text="${conversionRate} + '%'">0%</span></div>
+                        </div>
+                        <div class="hero-foot">
+                            <div><span class="k">Members</span><span class="v" th:text="${policyholderCount}">0</span></div>
+                            <div><span class="k">Plans on sale</span><span class="v" th:text="${activePlans}">0</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3">
+                    <div class="panel h-100">
+                        <div class="panel-title">Plan Mix</div>
+                        <div class="chart-box"><canvas id="agentPlanDonut"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-xl-4">
+                    <div class="panel h-100">
+                        <div class="panel-title">Approved — Ready to Issue</div>
+                        <div th:if="${#lists.isEmpty(readyToIssue)}" class="empty-state"><i class="bi bi-check2-circle"></i>Nothing waiting on you.</div>
+                        <div th:each="a : ${readyToIssue}" class="list-row">
+                            <div class="avatar avatar-sm" th:classappend="'avatar-c' + ${a.applicant.avatarTone}" th:text="${a.applicant.initials}">AB</div>
+                            <div class="grow">
+                                <div class="primary text-truncate" th:text="${a.applicant.fullName}">Name</div>
+                                <div class="secondary text-truncate" th:text="${a.requestedPlan.planName}">Plan</div>
+                            </div>
+                            <a th:href="@{'/policies/issue/' + ${a.id}}" class="btn btn-sm btn-primary">Issue</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-xl-8">
+                    <div class="panel h-100">
+                        <div class="panel-title">Policies Issued <span class="sub">Last 12 months</span></div>
+                        <div class="chart-box"><canvas id="agentPolicyBar"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-xl-4">
+                    <div class="panel h-100">
+                        <div class="panel-title">Recently Issued <a href="/policies" class="sub">View all</a></div>
+                        <div th:if="${#lists.isEmpty(recentPolicies)}" class="empty-state"><i class="bi bi-inbox"></i>No policies yet.</div>
+                        <div th:each="p : ${recentPolicies}" class="list-row">
+                            <div class="avatar avatar-sm" th:classappend="'avatar-c' + ${p.policyholder.avatarTone}" th:text="${p.policyholder.initials}">KP</div>
+                            <div class="grow">
+                                <div class="primary text-truncate" th:text="${p.policyCode}">POL</div>
+                                <div class="secondary text-truncate" th:text="${p.policyholder.fullName}">Name</div>
+                            </div>
+                            <a th:href="@{'/policies/' + ${p.id}}" class="btn btn-sm btn-outline-primary">View</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script th:inline="javascript">
+                renderBar('agentPolicyBar', [[${monthLabels}]], [[${policiesByMonth}]], 'Policies');
+                renderDonut('agentPlanDonut', [[${planMixLabels}]], [[${planMixValues}]]);
+            </script>
+        </div>
+
+        <!-- ============================== UNDERWRITER ============================== -->
+        <div sec:authorize="hasRole('UNDERWRITER')">
+            <div class="stat-grid mb-3">
+                <div class="stat-card tone-warning"><div class="stat-icon"><i class="bi bi-hourglass-split"></i></div><div class="stat-value" th:text="${pendingCount}">0</div><div class="stat-label">Pending Review</div></div>
+                <div class="stat-card tone-success"><div class="stat-icon"><i class="bi bi-check-circle"></i></div><div class="stat-value" th:text="${approvedCount}">0</div><div class="stat-label">Approved</div></div>
+                <div class="stat-card tone-danger"><div class="stat-icon"><i class="bi bi-x-circle"></i></div><div class="stat-value" th:text="${rejectedCount}">0</div><div class="stat-label">Declined</div></div>
+                <div class="stat-card tone-violet"><div class="stat-icon"><i class="bi bi-speedometer2"></i></div><div class="stat-value" th:text="${averageRisk}">0</div><div class="stat-label">Avg. Risk Score</div></div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-xl-5">
+                    <div class="hero-card">
+                        <div class="hero-badge"><i class="bi bi-file-earmark-medical"></i></div>
+                        <div class="hero-label">Total Applications</div>
+                        <div class="hero-value" th:text="${totalApplications}">0</div>
+                        <div class="hero-chips">
+                            <div class="hero-chip"><span class="k">Pending</span><span class="v" th:text="${pendingCount}">0</span></div>
+                            <div class="hero-chip"><span class="k">Approved</span><span class="v" th:text="${approvedCount}">0</span></div>
+                            <div class="hero-chip"><span class="k">Declined</span><span class="v" th:text="${rejectedCount}">0</span></div>
+                        </div>
+                        <div class="hero-foot">
+                            <div><span class="k">Avg. risk score</span><span class="v" th:text="${averageRisk} + ' / 100'">0</span></div>
+                            <div><span class="k">Approval rate</span><span class="v" th:text="${approvalRate} + '%'">0%</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3">
+                    <div class="panel h-100">
+                        <div class="panel-title">Approval Rate</div>
+                        <div class="ring-row">
+                            <div class="ring-wrap">
+                                <div class="ring" th:style="'--pct:' + ${approvalRate} + ';--ring-color:#16a34a'">
+                                    <span class="ring-value" th:text="${approvalRate} + '%'">0%</span>
+                                </div>
+                                <div class="ring-label">Of decided applications</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4">
+                    <div class="panel h-100">
+                        <div class="panel-title">Risk Distribution</div>
+                        <div class="chart-box"><canvas id="uwRiskDonut"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-xl-8">
+                    <div class="panel h-100">
+                        <div class="panel-title">Applications Received <span class="sub">Last 12 months</span></div>
+                        <div class="chart-box"><canvas id="uwAppBar"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-xl-4">
+                    <div class="panel h-100">
+                        <div class="panel-title">Awaiting Your Decision <a href="/underwriting" class="sub">View all</a></div>
+                        <div th:if="${#lists.isEmpty(pendingApplications)}" class="empty-state"><i class="bi bi-check2-circle"></i>Queue is clear.</div>
+                        <div th:each="a : ${pendingApplications}" class="list-row">
+                            <div class="avatar avatar-sm" th:classappend="'avatar-c' + ${a.applicant.avatarTone}" th:text="${a.applicant.initials}">AB</div>
+                            <div class="grow">
+                                <div class="primary text-truncate" th:text="${a.applicant.fullName}">Name</div>
+                                <div class="secondary text-truncate" th:text="${a.requestedPlan.planName} + ' · age ' + ${a.applicantAge}">Plan</div>
+                            </div>
+                            <a th:href="@{'/underwriting/' + ${a.id} + '/decide'}" class="btn btn-sm btn-primary">Review</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script th:inline="javascript">
+                renderBar('uwAppBar', [[${monthLabels}]], [[${applicationsByMonth}]], 'Applications');
+                renderDonut('uwRiskDonut', ['Low risk', 'Medium risk', 'High risk'],
+                            [ [[${riskLow}]], [[${riskMedium}]], [[${riskHigh}]] ],
+                            ['#16a34a', '#d97706', '#dc2626']);
+            </script>
+        </div>
+
+        <!-- ============================== CLAIMS OFFICER ============================== -->
+        <div sec:authorize="hasRole('CLAIMS_OFFICER')">
+            <div class="stat-grid mb-3">
+                <div class="stat-card tone-warning"><div class="stat-icon"><i class="bi bi-hourglass-split"></i></div><div class="stat-value" th:text="${submittedCount}">0</div><div class="stat-label">Awaiting Decision</div></div>
+                <div class="stat-card tone-success"><div class="stat-icon"><i class="bi bi-check-circle"></i></div><div class="stat-value" th:text="${claimsApproved}">0</div><div class="stat-label">Approved</div></div>
+                <div class="stat-card tone-danger"><div class="stat-icon"><i class="bi bi-x-circle"></i></div><div class="stat-value" th:text="${claimsRejected}">0</div><div class="stat-label">Rejected</div></div>
+                <div class="stat-card tone-info"><div class="stat-icon"><i class="bi bi-cash-stack"></i></div><div class="stat-value">LKR <span th:text="${#numbers.formatDecimal(totalPaidOut,0,'COMMA',0,'POINT')}">0</span></div><div class="stat-label">Total Settled</div></div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-xl-5">
+                    <div class="hero-card">
+                        <div class="hero-badge"><i class="bi bi-hospital"></i></div>
+                        <div class="hero-label">Total Claims</div>
+                        <div class="hero-value" th:text="${#numbers.formatInteger(totalClaims,1,'COMMA')}">0</div>
+                        <div class="hero-chips">
+                            <div class="hero-chip"><span class="k">Pending</span><span class="v" th:text="${claimsSubmitted}">0</span></div>
+                            <div class="hero-chip"><span class="k">Approved</span><span class="v" th:text="${claimsApproved}">0</span></div>
+                            <div class="hero-chip"><span class="k">Withdrawn</span><span class="v" th:text="${claimsWithdrawn}">0</span></div>
+                        </div>
+                        <div class="hero-foot">
+                            <div>
+                                <span class="k">Settled to date</span>
+                                <span class="v">LKR <span th:text="${#numbers.formatDecimal(totalPaidOut,0,'COMMA',0,'POINT')}">0</span></span>
+                            </div>
+                            <div>
+                                <span class="k">Value in queue</span>
+                                <span class="v">LKR <span th:text="${#numbers.formatDecimal(pendingValue,0,'COMMA',0,'POINT')}">0</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3">
+                    <div class="panel h-100">
+                        <div class="panel-title">Processing</div>
+                        <div class="ring-row">
+                            <div class="ring-wrap">
+                                <div class="ring" th:style="'--pct:' + ${approvalRate} + ';--ring-color:#16a34a'">
+                                    <span class="ring-value" th:text="${approvalRate} + '%'">0%</span>
+                                </div>
+                                <div class="ring-label">Approval Rate</div>
+                            </div>
+                            <div class="ring-wrap">
+                                <div class="ring" th:style="'--pct:' + ${settledRate} + ';--ring-color:#2563eb'">
+                                    <span class="ring-value" th:text="${settledRate} + '%'">0%</span>
+                                </div>
+                                <div class="ring-label">Settled</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4">
+                    <div class="panel h-100">
+                        <div class="panel-title">Claims Queue <a href="/claims" class="sub">View all</a></div>
+                        <div th:if="${#lists.isEmpty(submittedClaims)}" class="empty-state"><i class="bi bi-check2-circle"></i>Queue is clear.</div>
+                        <div th:each="c : ${submittedClaims}" class="list-row">
+                            <div class="avatar avatar-sm" th:classappend="'avatar-c' + ${c.claimant.avatarTone}" th:text="${c.claimant.initials}">KP</div>
+                            <div class="grow">
+                                <div class="primary text-truncate" th:text="${c.claimant.fullName}">Name</div>
+                                <div class="secondary text-truncate" th:text="${c.category.label} + ' · ' + ${c.hospitalName}">Category</div>
+                            </div>
+                            <a th:href="@{'/claims/' + ${c.id}}" class="btn btn-sm btn-primary">Process</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-xl-8">
+                    <div class="panel h-100">
+                        <div class="panel-title">Claim Volume <span class="sub">Last 12 months</span></div>
+                        <div class="chart-box"><canvas id="coClaimsBar"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-xl-4">
+                    <div class="panel h-100">
+                        <div class="panel-title">Claim Categories</div>
+                        <div class="chart-box"><canvas id="coCategoryDonut"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <script th:inline="javascript">
+                renderBar('coClaimsBar', [[${monthLabels}]], [[${claimsByMonth}]], 'Claims');
+                renderDonut('coCategoryDonut', [[${categoryLabels}]], [[${categoryValues}]]);
+            </script>
+        </div>
+
+        <!-- ============================== POLICYHOLDER ============================== -->
+        <div sec:authorize="hasRole('POLICYHOLDER')">
+            <div class="stat-grid mb-3">
+                <div class="stat-card tone-brand"><div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div><div class="stat-value" th:text="${#lists.size(policies)}">0</div><div class="stat-label">My Policies</div></div>
+                <div class="stat-card tone-info"><div class="stat-icon"><i class="bi bi-hospital"></i></div><div class="stat-value" th:text="${claimCount}">0</div><div class="stat-label">Claims Filed</div></div>
+                <div class="stat-card tone-success"><div class="stat-icon"><i class="bi bi-cash-coin"></i></div><div class="stat-value">LKR <span th:text="${#numbers.formatDecimal(totalPaid,0,'COMMA',0,'POINT')}">0</span></div><div class="stat-label">Premiums Paid</div></div>
+                <div class="stat-card tone-violet"><div class="stat-icon"><i class="bi bi-arrow-down-left-circle"></i></div><div class="stat-value">LKR <span th:text="${#numbers.formatDecimal(totalReimbursed,0,'COMMA',0,'POINT')}">0</span></div><div class="stat-label">Claims Settled</div></div>
+                <div class="stat-card tone-warning"><div class="stat-icon"><i class="bi bi-headset"></i></div><div class="stat-value" th:text="${openTicketCount}">0</div><div class="stat-label">Open Tickets</div></div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-xl-5">
+                    <div class="hero-card">
+                        <div class="hero-badge"><i class="bi bi-shield-check"></i></div>
+                        <div class="hero-label">Total Cover Available</div>
+                        <div class="hero-value">LKR <span th:text="${#numbers.formatDecimal(totalCoverage,0,'COMMA',0,'POINT')}">0</span></div>
+                        <div class="hero-chips">
+                            <div class="hero-chip"><span class="k">Used</span><span class="v" th:text="${coverageUsedPercent} + '%'">0%</span></div>
+                            <div class="hero-chip"><span class="k">Claims</span><span class="v" th:text="${claimCount}">0</span></div>
+                            <div class="hero-chip"><span class="k">Payments</span><span class="v" th:text="${paymentCount}">0</span></div>
+                        </div>
+                        <div class="hero-foot">
+                            <div>
+                                <span class="k">Premiums paid</span>
+                                <span class="v">LKR <span th:text="${#numbers.formatDecimal(totalPaid,0,'COMMA',0,'POINT')}">0</span></span>
+                            </div>
+                            <div>
+                                <span class="k">Claims settled</span>
+                                <span class="v">LKR <span th:text="${#numbers.formatDecimal(totalReimbursed,0,'COMMA',0,'POINT')}">0</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3">
+                    <div class="panel h-100">
+                        <div class="panel-title">Cover Used</div>
+                        <div class="ring-row">
+                            <div class="ring-wrap">
+                                <div class="ring" th:style="'--pct:' + ${coverageUsedPercent} + ';--ring-color:#2563eb'">
+                                    <span class="ring-value" th:text="${coverageUsedPercent} + '%'">0%</span>
+                                </div>
+                                <div class="ring-label">Of annual limit</div>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2 mt-3">
+                            <a href="/underwriting/new" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i>Apply for a Plan</a>
+                            <a href="/tickets/new" class="btn btn-outline-secondary btn-sm"><i class="bi bi-headset"></i>Get Support</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4">
+                    <div class="panel h-100">
+                        <div class="panel-title">Recent Claims <a href="/claims" class="sub">View all</a></div>
+                        <div th:if="${#lists.isEmpty(recentClaims)}" class="empty-state"><i class="bi bi-inbox"></i>No claims filed yet.</div>
+                        <div th:each="c : ${recentClaims}" class="list-row">
+                            <div class="avatar avatar-sm avatar-c0"><i class="bi bi-hospital"></i></div>
+                            <div class="grow">
+                                <div class="primary text-truncate" th:text="${c.category.label}">Category</div>
+                                <div class="secondary text-truncate" th:text="${c.hospitalName}">Hospital</div>
+                            </div>
+                            <div class="text-end">
+                                <div class="amount" th:text="'LKR ' + ${#numbers.formatDecimal(c.amountClaimed,0,'COMMA',0,'POINT')}">0</div>
+                                <span class="pill"
+                                      th:classappend="${c.status.name() == 'APPROVED'} ? 'pill-success' : (${c.status.name() == 'REJECTED'} ? 'pill-danger' : (${c.status.name() == 'WITHDRAWN'} ? 'pill-neutral' : 'pill-warning'))"
+                                      th:text="${c.status}">STATUS</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h6 class="fw-bold mb-2" th:if="${not #lists.isEmpty(policies)}">My Policies</h6>
+            <div class="row g-3 mb-3">
+                <div class="col-xl-6" th:each="p : ${policies}">
+                    <div class="policy-card h-100" th:with="usedPct=${@claimService.usedPercent(p)}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <div class="fw-bold" th:text="${p.policyCode}">POL</div>
+                                <div class="text-muted-soft" style="font-size:0.8rem;" th:text="${p.plan.planName}">Plan</div>
+                            </div>
+                            <span class="pill"
+                                  th:classappend="${p.status.name() == 'ACTIVE' or p.status.name() == 'RENEWED'} ? 'pill-success' : (${p.status.name() == 'LAPSED'} ? 'pill-warning' : 'pill-danger')"
+                                  th:text="${p.status}">ACTIVE</span>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted-soft" style="font-size:0.78rem;">
+                            <span>Premium <strong class="text-dark" th:text="'LKR ' + ${p.premiumAmount}">0</strong></span>
+                            <span>Due <strong class="text-dark" th:text="${p.nextDueDate}"></strong></span>
+                        </div>
+                        <div class="mt-2">
+                            <div class="d-flex justify-content-between" style="font-size:0.72rem;">
+                                <span class="text-muted-soft">Coverage used</span>
+                                <span class="fw-semibold" th:text="${#numbers.formatDecimal(usedPct,1,1)} + '%'">0%</span>
+                            </div>
+                            <div class="coverage-bar mt-1"><div class="fill" th:style="'width:' + ${usedPct} + '%'"></div></div>
+                        </div>
+                        <div class="d-flex gap-2 mt-3">
+                            <a th:href="@{'/payments/new'(policyId=${p.id})}" class="btn btn-sm btn-primary flex-fill">Pay</a>
+                            <a th:href="@{'/claims/new'(policyId=${p.id})}" class="btn btn-sm btn-outline-primary flex-fill">Claim</a>
+                            <a th:href="@{'/policies/' + ${p.id}}" class="btn btn-sm btn-outline-secondary flex-fill">Details</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12" th:if="${#lists.isEmpty(policies)}">
+                    <div class="panel empty-state"><i class="bi bi-file-earmark-plus"></i>No policies yet — apply for a plan to get covered.</div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-xl-8">
+                    <div class="panel h-100">
+                        <div class="panel-title">My Premium Payments <span class="sub">LKR, last 12 months</span></div>
+                        <div class="chart-box"><canvas id="phPremiumLine"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-xl-4">
+                    <div class="panel h-100">
+                        <div class="panel-title">Recent Payments <a href="/payments" class="sub">View all</a></div>
+                        <div th:if="${#lists.isEmpty(recentPayments)}" class="empty-state"><i class="bi bi-credit-card"></i>No payments yet.</div>
+                        <div th:each="p : ${recentPayments}" class="list-row">
+                            <div class="avatar avatar-sm avatar-c1"><i class="bi bi-credit-card"></i></div>
+                            <div class="grow">
+                                <div class="primary" th:text="'LKR ' + ${#numbers.formatDecimal(p.amount,0,'COMMA',0,'POINT')}">0</div>
+                                <div class="secondary" th:text="${p.method} + ' · ' + ${#temporals.format(p.paidAt,'MMM d, yyyy')}">method</div>
+                            </div>
+                            <span class="pill" th:classappend="${p.status.name() == 'PAID'} ? 'pill-success' : 'pill-neutral'" th:text="${p.status}">PAID</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script th:inline="javascript">
+                renderLine('phPremiumLine', [[${monthLabels}]], [[${premiumsByMonth}]], 'Premiums');
+            </script>
+        </div>
+
+        <!-- ============================== CRE ============================== -->
+        <div sec:authorize="hasRole('CRE')">
+            <div class="stat-grid mb-3">
+                <div class="stat-card tone-warning"><div class="stat-icon"><i class="bi bi-envelope-open"></i></div><div class="stat-value" th:text="${openCount}">0</div><div class="stat-label">Open Tickets</div></div>
+                <div class="stat-card tone-info"><div class="stat-icon"><i class="bi bi-hourglass-split"></i></div><div class="stat-value" th:text="${inProgressCount}">0</div><div class="stat-label">In Progress</div></div>
+                <div class="stat-card tone-success"><div class="stat-icon"><i class="bi bi-check-circle"></i></div><div class="stat-value" th:text="${closedCount}">0</div><div class="stat-label">Resolved</div></div>
+                <div class="stat-card tone-brand"><div class="stat-icon"><i class="bi bi-chat-dots"></i></div><div class="stat-value" th:text="${totalCount}">0</div><div class="stat-label">Total Tickets</div></div>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-xl-5">
+                    <div class="hero-card">
+                        <div class="hero-badge"><i class="bi bi-headset"></i></div>
+                        <div class="hero-label">Support Inbox</div>
+                        <div class="hero-value" th:text="${totalCount}">0</div>
+                        <div class="hero-chips">
+                            <div class="hero-chip"><span class="k">Open</span><span class="v" th:text="${openCount}">0</span></div>
+                            <div class="hero-chip"><span class="k">Working</span><span class="v" th:text="${inProgressCount}">0</span></div>
+                            <div class="hero-chip"><span class="k">Closed</span><span class="v" th:text="${closedCount}">0</span></div>
+                        </div>
+                        <div class="hero-foot">
+                            <div><span class="k">Resolution rate</span><span class="v" th:text="${resolutionRate} + '%'">0%</span></div>
+                            <div><span class="k">Responded</span><span class="v" th:text="${respondedRate} + '%'">0%</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3">
+                    <div class="panel h-100">
+                        <div class="panel-title">Service Levels</div>
+                        <div class="ring-row">
+                            <div class="ring-wrap">
+                                <div class="ring" th:style="'--pct:' + ${resolutionRate} + ';--ring-color:#16a34a'">
+                                    <span class="ring-value" th:text="${resolutionRate} + '%'">0%</span>
+                                </div>
+                                <div class="ring-label">Resolved</div>
+                            </div>
+                            <div class="ring-wrap">
+                                <div class="ring" th:style="'--pct:' + ${respondedRate} + ';--ring-color:#2563eb'">
+                                    <span class="ring-value" th:text="${respondedRate} + '%'">0%</span>
+                                </div>
+                                <div class="ring-label">Responded</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4">
+                    <div class="panel h-100">
+                        <div class="panel-title">Ticket Status</div>
+                        <div class="chart-box"><canvas id="creStatusDonut"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-xl-8">
+                    <div class="panel h-100">
+                        <div class="panel-title">Tickets Received <span class="sub">Last 12 months</span></div>
+                        <div class="chart-box"><canvas id="creTicketBar"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-xl-4">
+                    <div class="panel h-100">
+                        <div class="panel-title">Needs a Response <a href="/tickets" class="sub">View all</a></div>
+                        <div th:if="${#lists.isEmpty(openTicketsList)}" class="empty-state"><i class="bi bi-check2-circle"></i>Inbox zero.</div>
+                        <div th:each="t : ${openTicketsList}" class="list-row">
+                            <div class="avatar avatar-sm" th:classappend="'avatar-c' + ${t.raisedBy.avatarTone}" th:text="${t.raisedBy.initials}">KP</div>
+                            <div class="grow">
+                                <div class="primary text-truncate" th:text="${t.subject}">Subject</div>
+                                <div class="secondary text-truncate" th:text="${t.raisedBy.fullName}">Name</div>
+                            </div>
+                            <a th:href="@{'/tickets/' + ${t.id}}" class="btn btn-sm btn-primary">Reply</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script th:inline="javascript">
+                renderBar('creTicketBar', [[${monthLabels}]], [[${ticketsByMonth}]], 'Tickets');
+                renderDonut('creStatusDonut', ['Open', 'In Progress', 'Closed'],
+                            [ [[${openCount}]], [[${inProgressCount}]], [[${closedCount}]] ],
+                            ['#d97706', '#0891b2', '#16a34a']);
+            </script>
+        </div>
+    </main>
+</div>
+
+</body>
+</html>
