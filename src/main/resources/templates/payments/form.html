@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title='Pay Premium')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+    <main class="content" style="max-width:600px;">
+        <h3 class="mb-3">Pay Premium — <span th:text="${policy.policyCode}"></span></h3>
+        <p class="text-muted">Due: <strong th:text="${policy.nextDueDate}"></strong> &middot; Premium: <strong th:text="${policy.premiumAmount}"></strong> (<span th:text="${policy.premiumFrequency}"></span>)</p>
+        <form th:action="@{/payments}" method="post" class="card p-4">
+            <input type="hidden" name="policyId" th:value="${policy.id}"/>
+            <div class="mb-2">
+                <label class="form-label">Amount (LKR)</label>
+                <input type="number" step="0.01" name="amount" class="form-control" th:value="${policy.premiumAmount}" required/>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Payment Method</label>
+                <select name="method" class="form-select" required>
+                    <option th:each="m : ${methods}" th:value="${m}" th:text="${m}"></option>
+                </select>
+            </div>
+            <div class="mb-3 form-check">
+                <input type="checkbox" name="autoPay" class="form-check-input" value="true"/>
+                <label class="form-check-label">Enable auto-pay for future premiums</label>
+            </div>
+            <button type="submit" class="btn btn-primary">Pay Now</button>
+            <a th:href="@{'/policies/' + ${policy.id}}" class="btn btn-link">Cancel</a>
+        </form>
+    </main>
+</div>
+</body>
+</html>

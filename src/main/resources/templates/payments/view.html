@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title='Payment Receipt')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+    <main class="content" style="max-width:600px;">
+        <h3 class="mb-3">Payment Receipt</h3>
+        <div class="card p-4 mb-3">
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Policy</dt><dd class="col-sm-8" th:text="${payment.policy.policyCode}"></dd>
+                <dt class="col-sm-4">Amount</dt><dd class="col-sm-8" th:text="${payment.amount}"></dd>
+                <dt class="col-sm-4">Method</dt><dd class="col-sm-8" th:text="${payment.method}"></dd>
+                <dt class="col-sm-4">Auto-Pay</dt><dd class="col-sm-8" th:text="${payment.autoPay} ? 'Enabled' : 'Disabled'"></dd>
+                <dt class="col-sm-4">Billing Period</dt><dd class="col-sm-8" th:text="${payment.billingPeriodStart} + ' to ' + ${payment.billingPeriodEnd}"></dd>
+                <dt class="col-sm-4">Status</dt><dd class="col-sm-8" th:text="${payment.status}"></dd>
+                <dt class="col-sm-4">Paid At</dt><dd class="col-sm-8" th:text="${payment.paidAt}"></dd>
+            </dl>
+        </div>
+
+        <div class="card p-3 mb-3" th:if="${payment.status.name() == 'PAID'}">
+            <h6>Change Method / Auto-Pay</h6>
+            <form th:action="@{'/payments/' + ${payment.id} + '/method'}" method="post" class="row g-2">
+                <div class="col-md-6">
+                    <select name="method" class="form-select">
+                        <option th:each="m : ${methods}" th:value="${m}" th:selected="${m == payment.method}" th:text="${m}"></option>
+                    </select>
+                </div>
+                <div class="col-md-4 form-check mt-2">
+                    <input type="checkbox" name="autoPay" class="form-check-input" value="true" th:checked="${payment.autoPay}"/>
+                    <label class="form-check-label">Auto-Pay</label>
+                </div>
+                <div class="col-md-2"><button type="submit" class="btn btn-outline-primary w-100">Update</button></div>
+            </form>
+        </div>
+
+        <div th:if="${payment.status.name() == 'PAID'}">
+            <form th:action="@{'/payments/' + ${payment.id} + '/cancel'}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Cancel this payment?');">Cancel</button>
+            </form>
+            <form th:action="@{'/payments/' + ${payment.id} + '/refund'}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-warning" onclick="return confirm('Refund this payment?');">Refund</button>
+            </form>
+        </div>
+    </main>
+</div>
+</body>
+</html>

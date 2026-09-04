@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(title='Member Profile')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+    <main class="content" style="max-width:1000px;">
+
+        <div class="alert alert-success py-2" th:if="${param.saved}">
+            <i class="bi bi-check-circle me-1"></i>Your profile has been updated.
+        </div>
+
+        <!-- Identity header -->
+        <div class="profile-header mb-3">
+            <div class="avatar avatar-lg" th:classappend="'avatar-c' + ${member.avatarTone}"
+                 th:text="${member.initials}">KP</div>
+            <div class="grow">
+                <h3 class="mb-1" th:text="${member.fullName}">Name</h3>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="pill pill-brand" th:text="${member.role}">ROLE</span>
+                    <span class="text-muted-soft" style="font-size:0.85rem;">
+                        NIC <strong th:text="${member.nic}">-</strong> ·
+                        <span th:text="${member.age}">0</span> years old
+                    </span>
+                </div>
+            </div>
+            <a th:if="${ownProfile}" href="/profile/edit" class="btn btn-primary">
+                <i class="bi bi-pencil"></i>Edit Profile
+            </a>
+        </div>
+
+        <div class="row g-3">
+            <!-- Personal details -->
+            <div class="col-lg-6">
+                <div class="section-card h-100">
+                    <h6><i class="bi bi-person-vcard"></i> Personal Details</h6>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">NIC</dt><dd class="col-sm-7" th:text="${member.nic}">-</dd>
+                        <dt class="col-sm-5">Date of Birth</dt><dd class="col-sm-7" th:text="${member.dateOfBirth}">-</dd>
+                        <dt class="col-sm-5">Age</dt><dd class="col-sm-7" th:text="${member.age} + ' years'">-</dd>
+                        <dt class="col-sm-5">Gender</dt><dd class="col-sm-7" th:text="${member.gender}">-</dd>
+                        <dt class="col-sm-5">Marital Status</dt>
+                        <dd class="col-sm-7" th:text="${member.maritalStatus != null ? member.maritalStatus.label : 'Not provided'}">-</dd>
+                        <dt class="col-sm-5">Occupation</dt>
+                        <dd class="col-sm-7" th:text="${member.occupation ?: 'Not provided'}">-</dd>
+                        <dt class="col-sm-5">Address</dt><dd class="col-sm-7" th:text="${member.address}">-</dd>
+                        <dt class="col-sm-5">Phone</dt><dd class="col-sm-7" th:text="${member.phoneNumber}">-</dd>
+                        <dt class="col-sm-5">Email</dt><dd class="col-sm-7" th:text="${member.email}">-</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Medical information -->
+            <div class="col-lg-6">
+                <div class="section-card h-100">
+                    <h6><i class="bi bi-heart-pulse"></i> Medical Information</h6>
+
+                    <div class="d-flex gap-3 mb-3">
+                        <div class="metric-tile">
+                            <div class="metric-label">Blood Group</div>
+                            <div class="metric-value text-danger" th:text="${member.bloodGroup.label}">O+</div>
+                        </div>
+                        <div class="metric-tile">
+                            <div class="metric-label">Height</div>
+                            <div class="metric-value" th:text="${member.heightCm != null ? member.heightCm + ' cm' : '—'}">—</div>
+                        </div>
+                        <div class="metric-tile">
+                            <div class="metric-label">Weight</div>
+                            <div class="metric-value" th:text="${member.weightKg != null ? member.weightKg + ' kg' : '—'}">—</div>
+                        </div>
+                        <div class="metric-tile">
+                            <div class="metric-label">BMI</div>
+                            <div class="metric-value" th:text="${member.bmi != null ? member.bmi : '—'}">—</div>
+                        </div>
+                    </div>
+
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Allergies</dt>
+                        <dd class="col-sm-7" th:text="${#strings.isEmpty(member.allergies) ? 'None recorded' : member.allergies}">-</dd>
+                        <dt class="col-sm-5">Chronic Conditions</dt>
+                        <dd class="col-sm-7" th:text="${#strings.isEmpty(member.chronicConditions) ? 'None recorded' : member.chronicConditions}">-</dd>
+                        <dt class="col-sm-5">Current Medications</dt>
+                        <dd class="col-sm-7" th:text="${#strings.isEmpty(member.currentMedications) ? 'None recorded' : member.currentMedications}">-</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Emergency contact -->
+            <div class="col-lg-6">
+                <div class="section-card h-100">
+                    <h6><i class="bi bi-telephone-plus"></i> Emergency Contact</h6>
+                    <div th:if="${#strings.isEmpty(member.emergencyContactName)}" class="empty-state py-3">
+                        <i class="bi bi-person-exclamation"></i>No emergency contact recorded.
+                    </div>
+                    <dl class="row mb-0" th:unless="${#strings.isEmpty(member.emergencyContactName)}">
+                        <dt class="col-sm-5">Name</dt><dd class="col-sm-7" th:text="${member.emergencyContactName}">-</dd>
+                        <dt class="col-sm-5">Relationship</dt>
+                        <dd class="col-sm-7" th:text="${member.emergencyContactRelation ?: '—'}">-</dd>
+                        <dt class="col-sm-5">Phone</dt><dd class="col-sm-7" th:text="${member.emergencyContactPhone}">-</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Account -->
+            <div class="col-lg-6">
+                <div class="section-card h-100">
+                    <h6><i class="bi bi-shield-lock"></i> Account &amp; Access</h6>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-5">Login Username</dt>
+                        <dd class="col-sm-7" th:text="${member.role.name() == 'POLICYHOLDER'} ? ${member.nic} + ' (NIC)' : ${member.email} + ' (email)'">-</dd>
+                        <dt class="col-sm-5">Role</dt><dd class="col-sm-7" th:text="${member.role}">-</dd>
+                        <dt class="col-sm-5">Status</dt>
+                        <dd class="col-sm-7">
+                            <span class="pill" th:classappend="${member.enabled} ? 'pill-success' : 'pill-danger'"
+                                  th:text="${member.enabled} ? 'Active' : 'Disabled'">Active</span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Policies and covered dependents -->
+        <div th:if="${policies != null and not #lists.isEmpty(policies)}">
+            <h6 class="fw-bold mt-4 mb-2">Cover &amp; Covered Members</h6>
+            <div class="section-card mb-3" th:each="p : ${policies}">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <a class="fw-bold" th:href="@{'/policies/' + ${p.id}}" th:text="${p.policyCode}">POL</a>
+                        <div class="text-muted-soft" style="font-size:0.82rem;"
+                             th:text="${p.plan.planName} + ' · ' + ${p.plan.planType}">Plan</div>
+                    </div>
+                    <span class="pill"
+                          th:classappend="${p.status.name() == 'ACTIVE' or p.status.name() == 'RENEWED'} ? 'pill-success' : 'pill-neutral'"
+                          th:text="${p.status}">ACTIVE</span>
+                </div>
+
+                <div class="divider"></div>
+                <div class="text-muted-soft mb-2" style="font-size:0.8rem; font-weight:600;">
+                    COVERED DEPENDENTS (<span th:text="${#lists.size(p.dependents)}">0</span>)
+                </div>
+                <div th:if="${#lists.isEmpty(p.dependents)}" class="text-muted-soft" style="font-size:0.85rem;">
+                    No dependents on this policy — the policyholder is the only covered member.
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-md-6" th:each="d : ${p.dependents}">
+                        <div class="dependent-card">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <div class="avatar avatar-sm" th:classappend="'avatar-c' + ${d.avatarTone}"
+                                     th:text="${d.initials}">AB</div>
+                                <div class="grow">
+                                    <div class="fw-semibold" style="font-size:0.87rem;" th:text="${d.fullName}">Name</div>
+                                    <div class="text-muted-soft" style="font-size:0.76rem;"
+                                         th:text="${d.relationship} + ' · ' + ${d.age} + ' yrs · ' + ${d.gender}">rel</div>
+                                </div>
+                                <span class="pill pill-danger" th:text="${d.bloodGroup.label}">O+</span>
+                            </div>
+                            <dl class="row mb-0" style="font-size:0.78rem;">
+                                <dt class="col-5">NIC</dt>
+                                <dd class="col-7">
+                                    <span th:if="${not #strings.isEmpty(d.nic)}" th:text="${d.nic}">-</span>
+                                    <span th:if="${#strings.isEmpty(d.nic)}" class="text-muted-soft"
+                                          th:text="${d.nicRequired} ? 'Required — not provided' : 'Minor, not issued yet'">-</span>
+                                </dd>
+                                <dt class="col-5">Date of Birth</dt><dd class="col-7" th:text="${d.dateOfBirth}">-</dd>
+                                <dt class="col-5">Allergies</dt>
+                                <dd class="col-7" th:text="${#strings.isEmpty(d.allergies) ? 'None recorded' : d.allergies}">-</dd>
+                                <dt class="col-5">Conditions</dt>
+                                <dd class="col-7" th:text="${#strings.isEmpty(d.chronicConditions) ? 'None recorded' : d.chronicConditions}">-</dd>
+                                <dt class="col-5">Medications</dt>
+                                <dd class="col-7" th:text="${#strings.isEmpty(d.currentMedications) ? 'None recorded' : d.currentMedications}">-</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

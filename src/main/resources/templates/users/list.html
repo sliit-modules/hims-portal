@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title='Manage Users')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+    <main class="content">
+        <div class="page-header d-flex justify-content-between align-items-end">
+            <div>
+                <h3>Manage Users</h3>
+                <div class="subtitle">Staff accounts log in with email; policyholders log in with NIC</div>
+            </div>
+            <a href="/users/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i>New Staff Account</a>
+        </div>
+        <div class="table-card">
+            <table class="table table-hover">
+                <thead><tr><th>Login</th><th>Full Name</th><th>Role</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="u : ${users}">
+                    <td class="fw-semibold" th:text="${u.role.name() == 'POLICYHOLDER'} ? ${u.nic} : ${u.email}">login</td>
+                    <td th:text="${u.fullName}">Name</td>
+                    <td><span class="pill pill-brand" th:text="${u.role}">ROLE</span></td>
+                    <td><span class="pill" th:classappend="${u.enabled} ? 'pill-success' : 'pill-danger'" th:text="${u.enabled} ? 'Enabled' : 'Disabled'">Enabled</span></td>
+                    <td>
+                        <form th:if="${u.enabled}" th:action="@{'/users/' + ${u.id} + '/disable'}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Disable</button>
+                        </form>
+                        <form th:unless="${u.enabled}" th:action="@{'/users/' + ${u.id} + '/enable'}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-success">Enable</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(title='Policy Details')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+    <main class="content" style="max-width:900px;">
+        <div class="page-header d-flex justify-content-between align-items-start">
+            <h3 th:text="${policy.policyCode}">POL</h3>
+            <span class="pill"
+                  th:classappend="${policy.status.name() == 'ACTIVE' or policy.status.name() == 'RENEWED'} ? 'pill-success' : (${policy.status.name() == 'LAPSED'} ? 'pill-warning' : 'pill-danger')"
+                  th:text="${policy.status}">ACTIVE</span>
+        </div>
+        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+        <div class="row g-3 mb-3">
+            <div class="col-md-8">
+                <div class="section-card h-100">
+                    <h6><i class="bi bi-file-earmark-text"></i> Policy Details</h6>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Policyholder</dt>
+                        <dd class="col-sm-8">
+                            <a th:href="@{'/members/' + ${policy.policyholder.id}}"
+                               th:text="${policy.policyholder.fullName} + ' (' + ${policy.policyholder.nic} + ')'">Name</a>
+                            <span class="pill pill-danger ms-1" th:text="${policy.policyholder.bloodGroup.label}">O+</span>
+                        </dd>
+                        <dt class="col-sm-4">Plan</dt><dd class="col-sm-8" th:text="${policy.plan.planName} + ' — ' + ${policy.plan.planType}"></dd>
+                        <dt class="col-sm-4">Premium</dt><dd class="col-sm-8" th:text="'LKR ' + ${policy.premiumAmount} + ' / ' + ${policy.premiumFrequency}"></dd>
+                        <dt class="col-sm-4">Next Due Date</dt><dd class="col-sm-8" th:text="${policy.nextDueDate}"></dd>
+                        <dt class="col-sm-4">Coverage Period</dt><dd class="col-sm-8" th:text="${policy.startDate} + ' to ' + ${policy.endDate}"></dd>
+                        <dt class="col-sm-4">Source Application</dt><dd class="col-sm-8" th:text="${policy.sourceApplication.applicationCode}"></dd>
+                    </dl>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="section-card h-100" th:with="usedPct=${@claimService.usedPercent(policy)}">
+                    <h6><i class="bi bi-shield-check"></i> Coverage Usage</h6>
+                    <div class="d-flex justify-content-between" style="font-size:0.8rem;">
+                        <span class="text-muted-soft">Used</span>
+                        <span class="fw-semibold" th:text="${#numbers.formatDecimal(usedPct,1,1)} + '%'">0%</span>
+                    </div>
+                    <div class="coverage-bar mt-1 mb-2"><div class="fill" th:style="'width:' + ${usedPct} + '%'"></div></div>
+                    <div class="text-muted-soft" style="font-size:0.8rem;">Annual limit: <strong class="text-dark" th:text="'LKR ' + ${policy.plan.coverageLimit}"></strong></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3 d-flex gap-2" sec:authorize="hasAnyRole('SALES_AGENT','ADMIN')">
+            <a th:href="@{'/policies/' + ${policy.id} + '/edit'}" class="btn btn-outline-primary btn-sm"><i class="bi bi-arrow-repeat"></i>Renew / Modify</a>
+            <form th:action="@{'/policies/' + ${policy.id} + '/cancel'}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Cancel/terminate this policy?');"><i class="bi bi-x-circle"></i>Cancel Policy</button>
+            </form>
+        </div>
+        <div class="mb-3 d-flex gap-2" sec:authorize="hasRole('POLICYHOLDER')">
+            <a th:href="@{'/payments/new'(policyId=${policy.id})}" class="btn btn-primary btn-sm"><i class="bi bi-credit-card"></i>Pay Premium</a>
+            <a th:href="@{'/claims/new'(policyId=${policy.id})}" class="btn btn-outline-primary btn-sm"><i class="bi bi-hospital"></i>File a Claim</a>
+        </div>
+
+        <div class="section-card mb-3">
+            <h6>
+                <i class="bi bi-people"></i> Covered Dependents
+                <span class="pill pill-neutral ms-2" th:text="${#lists.size(policy.dependents)}">0</span>
+            </h6>
+            <div th:if="${#lists.isEmpty(policy.dependents)}" class="text-muted-soft" style="font-size:0.85rem;">
+                No dependents added — the policyholder is the only covered member.
+            </div>
+            <div class="row g-2">
+                <div class="col-md-6" th:each="d : ${policy.dependents}">
+                    <div class="dependent-card">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <div class="avatar avatar-sm" th:classappend="'avatar-c' + ${d.avatarTone}" th:text="${d.initials}">AB</div>
+                            <div class="grow">
+                                <div class="fw-semibold" style="font-size:0.87rem;" th:text="${d.fullName}">Name</div>
+                                <div class="text-muted-soft" style="font-size:0.76rem;"
+                                     th:text="${d.relationship} + ' · ' + ${d.age} + ' yrs · ' + ${d.gender}">rel</div>
+                            </div>
+                            <span class="pill pill-danger" th:text="${d.bloodGroup.label}">O+</span>
+                        </div>
+                        <dl class="row mb-2" style="font-size:0.78rem;">
+                            <dt class="col-5">NIC</dt>
+                            <dd class="col-7">
+                                <span th:if="${not #strings.isEmpty(d.nic)}" th:text="${d.nic}">-</span>
+                                <span th:if="${#strings.isEmpty(d.nic)}" class="text-muted-soft"
+                                      th:text="${d.nicRequired} ? 'Required — not provided' : 'Minor, not issued yet'">-</span>
+                            </dd>
+                            <dt class="col-5">Date of Birth</dt><dd class="col-7" th:text="${d.dateOfBirth}">-</dd>
+                            <dt class="col-5">Allergies</dt>
+                            <dd class="col-7" th:text="${#strings.isEmpty(d.allergies) ? 'None recorded' : d.allergies}">-</dd>
+                            <dt class="col-5">Conditions</dt>
+                            <dd class="col-7" th:text="${#strings.isEmpty(d.chronicConditions) ? 'None recorded' : d.chronicConditions}">-</dd>
+                        </dl>
+                        <form sec:authorize="hasAnyRole('SALES_AGENT','ADMIN')"
+                              th:action="@{'/policies/' + ${policy.id} + '/dependents/' + ${d.id} + '/delete'}" method="post">
+                            <button type="submit" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Remove this dependent?');">
+                                <i class="bi bi-person-dash"></i>Remove
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${policy.plan.planType.name() == 'FAMILY'}" sec:authorize="hasAnyRole('SALES_AGENT','ADMIN')" class="section-card mb-3">
+            <h6><i class="bi bi-person-plus"></i> Add Dependent</h6>
+            <form th:action="@{'/policies/' + ${policy.id} + '/dependents'}" method="post" class="row g-2">
+                <div class="col-md-4">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" name="fullName" class="form-control" required/>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">NIC <span class="text-muted-soft">(required from age 18)</span></label>
+                    <input type="text" name="nic" class="form-control" maxlength="12" pattern="\d{12}"
+                           placeholder="200412345678"/>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Date of Birth</label>
+                    <input type="date" name="dateOfBirth" class="form-control" required/>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Gender</label>
+                    <select name="gender" class="form-select" required>
+                        <option th:each="g : ${T(com.medisure.hims.model.Gender).values()}" th:value="${g}" th:text="${g}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Relationship</label>
+                    <select name="relationship" class="form-select" required>
+                        <option th:each="r : ${T(com.medisure.hims.model.RelationshipType).values()}" th:value="${r}" th:text="${r}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Blood Group</label>
+                    <select name="bloodGroup" class="form-select" required>
+                        <option th:each="b : ${T(com.medisure.hims.model.BloodGroup).values()}" th:value="${b}" th:text="${b.label}"></option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Allergies</label>
+                    <input type="text" name="allergies" class="form-control" placeholder="None"/>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Chronic Conditions</label>
+                    <input type="text" name="chronicConditions" class="form-control" placeholder="None"/>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Current Medications</label>
+                    <input type="text" name="currentMedications" class="form-control" placeholder="None"/>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-person-plus"></i>Add Dependent</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="section-card mb-3">
+            <h6><i class="bi bi-hospital"></i> Claims</h6>
+            <table class="table table-sm mb-0">
+                <thead><tr><th>Code</th><th>Hospital</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="c : ${claims}">
+                    <td th:text="${c.claimCode}">CLM</td>
+                    <td th:text="${c.hospitalName}">-</td>
+                    <td th:text="'LKR ' + ${c.amountClaimed}">0.00</td>
+                    <td><span class="pill"
+                              th:classappend="${c.status.name() == 'APPROVED'} ? 'pill-success' : (${c.status.name() == 'REJECTED'} ? 'pill-danger' : (${c.status.name() == 'WITHDRAWN'} ? 'pill-neutral' : 'pill-warning'))"
+                              th:text="${c.status}">SUBMITTED</span></td>
+                    <td><a th:href="@{'/claims/' + ${c.id}}" class="btn btn-sm btn-outline-primary">View</a></td>
+                </tr>
+                </tbody>
+            </table>
+            <div th:if="${#lists.isEmpty(claims)}" class="text-muted-soft" style="font-size:0.85rem;">No claims filed yet.</div>
+        </div>
+
+        <div class="section-card mb-4">
+            <h6><i class="bi bi-credit-card"></i> Payments</h6>
+            <table class="table table-sm mb-0">
+                <thead><tr><th>Amount</th><th>Method</th><th>Billing Period</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${payments}">
+                    <td th:text="'LKR ' + ${p.amount}">0.00</td>
+                    <td th:text="${p.method}">CARD</td>
+                    <td th:text="${p.billingPeriodStart} + ' - ' + ${p.billingPeriodEnd}">-</td>
+                    <td><span class="pill" th:classappend="${p.status.name() == 'PAID'} ? 'pill-success' : (${p.status.name() == 'REFUNDED'} ? 'pill-info' : 'pill-neutral')" th:text="${p.status}">PAID</span></td>
+                    <td><a th:href="@{'/payments/' + ${p.id}}" class="btn btn-sm btn-outline-primary">View</a></td>
+                </tr>
+                </tbody>
+            </table>
+            <div th:if="${#lists.isEmpty(payments)}" class="text-muted-soft" style="font-size:0.85rem;">No payments made yet.</div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

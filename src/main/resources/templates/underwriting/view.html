@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(title='Application Details')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+    <main class="content" style="max-width:700px;">
+        <div class="page-header">
+            <h3 th:text="${application.applicationCode}">APP-2026-000001</h3>
+            <span class="pill"
+                  th:classappend="${application.decision.name() == 'APPROVED'} ? 'pill-success' : (${application.decision.name() == 'REJECTED'} ? 'pill-danger' : 'pill-warning')"
+                  th:text="${application.decision}">PENDING</span>
+        </div>
+        <div class="section-card mb-3">
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Applicant</dt><dd class="col-sm-8" th:text="${application.applicant.fullName} + ' (' + ${application.applicant.nic} + ')'">Name</dd>
+                <dt class="col-sm-4">Requested Plan</dt><dd class="col-sm-8" th:text="${application.requestedPlan.planName}">Plan</dd>
+                <dt class="col-sm-4">Applicant Age</dt><dd class="col-sm-8" th:text="${application.applicantAge}">0</dd>
+                <dt class="col-sm-4">Pre-existing Conditions</dt><dd class="col-sm-8" th:text="${application.hasPreExistingConditions} ? 'Yes' : 'No'">No</dd>
+                <dt class="col-sm-4" th:if="${application.conditionsNotes}">Condition Notes</dt><dd class="col-sm-8" th:if="${application.conditionsNotes}" th:text="${application.conditionsNotes}"></dd>
+                <dt class="col-sm-4">Dependents Planned</dt><dd class="col-sm-8" th:text="${application.numDependentsPlanned}">0</dd>
+                <dt class="col-sm-4" th:if="${application.riskScore}">Risk Score</dt><dd class="col-sm-8" th:if="${application.riskScore}" th:text="${application.riskScore} + ' / 100'"></dd>
+                <dt class="col-sm-4" th:if="${application.decision.name() == 'APPROVED'}">Premium Loading</dt>
+                <dd class="col-sm-8" th:if="${application.decision.name() == 'APPROVED'}" th:text="${application.premiumLoadingPercent} + '%'"></dd>
+                <dt class="col-sm-4">Submitted</dt><dd class="col-sm-8" th:text="${#temporals.format(application.submittedAt, 'MMM d, yyyy HH:mm')}">-</dd>
+            </dl>
+        </div>
+
+        <div sec:authorize="hasAnyRole('UNDERWRITER','ADMIN')" th:if="${application.decision.name() == 'PENDING'}">
+            <a th:href="@{'/underwriting/' + ${application.id} + '/decide'}" class="btn btn-primary"><i class="bi bi-clipboard2-check"></i>Review &amp; Decide</a>
+        </div>
+
+        <div sec:authorize="hasAnyRole('SALES_AGENT','ADMIN')" th:if="${application.decision.name() == 'APPROVED'}">
+            <a th:href="@{'/policies/issue/' + ${application.id}}" class="btn btn-primary"><i class="bi bi-file-earmark-plus"></i>Issue Policy</a>
+        </div>
+    </main>
+</div>
+</body>
+</html>

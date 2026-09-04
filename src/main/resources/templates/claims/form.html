@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title='File a Claim')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+    <main class="content" style="max-width:660px;">
+        <div class="page-header">
+            <h3>File a Claim</h3>
+            <div class="subtitle">
+                Policy <span th:text="${policy.policyCode}"></span> ·
+                remaining cover <strong th:text="'LKR ' + ${#numbers.formatDecimal(remainingCoverage,0,'COMMA',2,'POINT')}">0.00</strong>
+            </div>
+        </div>
+        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+        <form th:action="@{/claims}" method="post" enctype="multipart/form-data" class="section-card">
+            <input type="hidden" name="policyId" th:value="${policy.id}"/>
+
+            <div class="mb-2" th:if="${not #lists.isEmpty(policy.dependents)}">
+                <label class="form-label">Claiming for</label>
+                <select name="claimantDependentId" class="form-select">
+                    <option value="">Myself (policyholder)</option>
+                    <option th:each="d : ${policy.dependents}" th:value="${d.id}"
+                            th:text="${d.fullName} + ' (' + ${d.relationship} + ')'"></option>
+                </select>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Claim Category</label>
+                    <select name="category" class="form-select" required>
+                        <option th:each="c : ${T(com.medisure.hims.model.ClaimCategory).values()}"
+                                th:value="${c}" th:text="${c.label}"></option>
+                    </select>
+                </div>
+                <div class="col-md-6 mb-2">
+                    <label class="form-label">Treatment Date</label>
+                    <input type="date" name="treatmentDate" class="form-control" required/>
+                </div>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Hospital / Clinic Name</label>
+                <input type="text" name="hospitalName" class="form-control" required/>
+            </div>
+            <div class="mb-2">
+                <label class="form-label">Diagnosis Summary</label>
+                <textarea name="diagnosisSummary" class="form-control" rows="3" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Amount Claimed (LKR)</label>
+                <input type="number" step="0.01" min="1" name="amountClaimed" class="form-control" required/>
+            </div>
+
+            <div class="divider"></div>
+            <div class="mb-3">
+                <label class="form-label">Supporting Documents</label>
+                <input type="file" name="documents" class="form-control" multiple
+                       accept="application/pdf,image/jpeg,image/png"/>
+                <div class="text-muted-soft mt-1" style="font-size:0.78rem;">
+                    <i class="bi bi-info-circle"></i>
+                    Attach hospital bills, discharge summaries or diagnostic reports.
+                    PDF, JPG or PNG, up to 5 MB each. You can add more after submitting.
+                </div>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i>Submit Claim</button>
+                <a th:href="@{'/policies/' + ${policy.id}}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </main>
+</div>
+</body>
+</html>

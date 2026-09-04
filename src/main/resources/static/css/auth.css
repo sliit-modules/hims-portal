@@ -1,0 +1,235 @@
+/* =========================================================
+   MediSure auth screen — split panel with a sliding gradient
+   overlay over a frosted-glass card.
+   ========================================================= */
+
+:root {
+    --g1: #0ea5e9;   /* sky   */
+    --g2: #0d9488;   /* teal  */
+    --g3: #2563eb;   /* blue  */
+    --g4: #7c3aed;   /* violet*/
+    --ink: #0f172a;
+    --muted: #64748b;
+    --line: rgba(148, 163, 184, 0.35);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    color: var(--ink);
+    background: linear-gradient(135deg, #e0f2fe 0%, #ccfbf1 45%, #ede9fe 100%);
+    display: flex; align-items: center; justify-content: center;
+    padding: 2rem 1rem;
+    overflow-x: hidden;
+}
+
+/* ---------- Blurred colour blobs (the glass needs something to refract) ---------- */
+.bg-blobs { position: fixed; inset: 0; overflow: hidden; z-index: 0; }
+.blob { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.55; }
+.blob-1 { width: 480px; height: 480px; background: var(--g2); top: -120px; left: -100px; }
+.blob-2 { width: 420px; height: 420px; background: var(--g3); bottom: -140px; right: -80px; }
+.blob-3 { width: 360px; height: 360px; background: var(--g4); top: 35%; left: 55%; opacity: 0.35; }
+
+.auth-stage { position: relative; z-index: 1; width: 100%; display: flex; justify-content: center; }
+
+/* ---------- The frosted card ---------- */
+.auth-shell {
+    position: relative;
+    width: 100%;
+    max-width: 940px;
+    min-height: 620px;
+    border-radius: 26px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.62);
+    backdrop-filter: blur(22px) saturate(160%);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 30px 70px -25px rgba(15, 23, 42, 0.45);
+}
+
+/* ---------- Form panes: each occupies the right half, overlay covers one ---------- */
+.form-pane {
+    position: absolute; top: 0; height: 100%; width: 50%;
+    display: flex; align-items: center; justify-content: center;
+    padding: 2.25rem 2.5rem;
+    transition: transform .6s ease-in-out, opacity .45s ease-in-out;
+}
+
+.sign-in-pane  { left: 0; z-index: 2; }
+.sign-up-pane  { left: 0; z-index: 1; opacity: 0; pointer-events: none; }
+
+.auth-shell.panel-active .sign-in-pane  { transform: translateX(100%); opacity: 0; pointer-events: none; }
+.auth-shell.panel-active .sign-up-pane  { transform: translateX(100%); opacity: 1; z-index: 5; pointer-events: auto; }
+
+.auth-form { width: 100%; max-width: 340px; display: flex; flex-direction: column; }
+
+.form-title {
+    font-size: 1.55rem; font-weight: 800; letter-spacing: -0.02em;
+    margin: 0 0 0.25rem;
+    background: linear-gradient(120deg, var(--g3), var(--g2));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.form-sub { color: var(--muted); font-size: 0.82rem; margin: 0 0 1.25rem; }
+
+/* ---------- Glassy inputs ---------- */
+.field { position: relative; margin-bottom: 0.7rem; }
+.field i {
+    position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); font-size: 0.9rem; pointer-events: none;
+}
+.field input, .field select {
+    width: 100%;
+    padding: 0.72rem 0.9rem 0.72rem 2.35rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(6px);
+    font-size: 0.85rem; font-family: inherit; color: var(--ink);
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    appearance: none;
+}
+.field select { cursor: pointer; }
+.field input::placeholder { color: #94a3b8; }
+.field input:focus, .field select:focus {
+    outline: none;
+    border-color: var(--g3);
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+}
+
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.6rem; }
+.field-grid .span-2 { grid-column: 1 / -1; }
+.field-error {
+    color: #dc2626; font-size: 0.72rem; margin: -0.45rem 0 0.5rem; padding-left: 0.2rem;
+}
+
+.muted-note {
+    font-size: 0.72rem; color: var(--muted); text-align: center;
+    margin: 0.35rem 0 0.9rem;
+}
+
+/* ---------- Buttons ---------- */
+.btn-solid {
+    margin-top: 0.4rem;
+    padding: 0.78rem 1rem;
+    border: none; border-radius: 999px;
+    background: linear-gradient(120deg, var(--g3), var(--g2));
+    color: #fff; font-weight: 700; font-size: 0.82rem;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 12px 24px -12px rgba(37, 99, 235, 0.9);
+    transition: transform .12s ease, box-shadow .2s ease, filter .2s ease;
+}
+.btn-solid:hover { filter: brightness(1.06); box-shadow: 0 16px 28px -12px rgba(37, 99, 235, 1); }
+.btn-solid:active { transform: translateY(1px); }
+
+.btn-ghost {
+    margin-top: 1.35rem;
+    padding: 0.72rem 2.4rem;
+    border-radius: 999px;
+    border: 1.5px solid rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(4px);
+    color: #fff; font-weight: 700; font-size: 0.78rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    cursor: pointer;
+    transition: background .2s ease, transform .12s ease;
+}
+.btn-ghost:hover { background: rgba(255, 255, 255, 0.26); }
+.btn-ghost:active { transform: translateY(1px); }
+
+.link-toggle {
+    display: none; margin-top: 0.9rem; background: none; border: none;
+    color: var(--muted); font-size: 0.78rem; cursor: pointer; font-family: inherit;
+}
+.link-toggle strong { color: var(--g3); }
+
+/* ---------- Inline alerts ---------- */
+.inline-alert {
+    border-radius: 10px; padding: 0.55rem 0.75rem; font-size: 0.76rem;
+    margin-bottom: 0.8rem; border: 1px solid transparent;
+}
+.inline-alert.danger  { background: rgba(254, 226, 226, 0.85); color: #b91c1c; border-color: #fecaca; }
+.inline-alert.success { background: rgba(220, 252, 231, 0.85); color: #15803d; border-color: #bbf7d0; }
+.inline-alert.info    { background: rgba(224, 242, 254, 0.85); color: #0369a1; border-color: #bae6fd; }
+
+/* ---------- Sliding gradient overlay ---------- */
+.overlay-wrap {
+    position: absolute; top: 0; left: 50%;
+    width: 50%; height: 100%;
+    overflow: hidden;
+    transition: transform .6s ease-in-out;
+    z-index: 10;
+}
+.auth-shell.panel-active .overlay-wrap { transform: translateX(-100%); }
+
+.overlay {
+    position: relative; left: -100%;
+    width: 200%; height: 100%;
+    background: linear-gradient(135deg, var(--g2) 0%, var(--g1) 45%, var(--g3) 100%);
+    color: #fff;
+    transform: translateX(50%);
+    transition: transform .6s ease-in-out;
+}
+.auth-shell.panel-active .overlay { transform: translateX(0); }
+
+.overlay-pane {
+    position: absolute; top: 0; height: 100%; width: 50%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 2.5rem 2.25rem;
+    transition: transform .6s ease-in-out;
+    overflow: hidden;
+}
+/* The pane on screen always sits at 0 so its content stays centred; the off-screen one is
+   nudged aside to give the slide a parallax feel. overlay-left shows in sign-in mode,
+   overlay-right in sign-up mode. */
+.overlay-left  { transform: translateX(0); }
+.overlay-right { right: 0; transform: translateX(18%); }
+.auth-shell.panel-active .overlay-left  { transform: translateX(-18%); }
+.auth-shell.panel-active .overlay-right { transform: translateX(0); }
+
+.overlay-pane h2 {
+    font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em;
+    margin: 0 0 0.75rem; position: relative; z-index: 2;
+}
+.overlay-pane p {
+    font-size: 0.85rem; line-height: 1.6; opacity: 0.92;
+    max-width: 280px; margin: 0; position: relative; z-index: 2;
+}
+.overlay-pane .btn-ghost { position: relative; z-index: 2; }
+
+.brand-badge {
+    width: 56px; height: 56px; border-radius: 17px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem; margin-bottom: 1.1rem;
+    position: relative; z-index: 2;
+}
+
+/* decorative glass shapes, like the reference */
+.shape { position: absolute; background: rgba(255, 255, 255, 0.13); border: 1px solid rgba(255,255,255,0.18); }
+.s1 { width: 130px; height: 130px; border-radius: 50%; top: -30px; left: -35px; }
+.s2 { width: 74px; height: 74px; border-radius: 20px; bottom: 8%; right: 12%; transform: rotate(22deg); }
+.s3 { width: 100px; height: 100px; border-radius: 26px; top: 12%; right: -25px; transform: rotate(18deg); }
+.s4 { width: 150px; height: 150px; border-radius: 50%; bottom: -45px; left: -40px; }
+
+/* ---------- Small screens: stack, no sliding overlay ---------- */
+@media (max-width: 820px) {
+    .auth-shell { min-height: auto; max-width: 460px; }
+    .overlay-wrap { display: none; }
+    .form-pane {
+        position: relative; width: 100%; transform: none !important;
+        padding: 2rem 1.5rem;
+    }
+    .sign-in-pane { display: flex; }
+    .sign-up-pane { display: none; opacity: 1; pointer-events: auto; }
+    .auth-shell.panel-active .sign-in-pane { display: none; opacity: 1; }
+    .auth-shell.panel-active .sign-up-pane { display: flex; }
+    .auth-form { max-width: 100%; }
+    .link-toggle { display: block; }
+}

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: head(title='Insurance Plans')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+    <main class="content">
+        <div class="page-header d-flex justify-content-between align-items-end">
+            <div>
+                <h3>Insurance Plans</h3>
+                <div class="subtitle">Coverage packages available to sell and purchase</div>
+            </div>
+            <a href="/plans/new" class="btn btn-primary" sec:authorize="hasRole('ADMIN')"><i class="bi bi-plus-lg"></i>New Plan</a>
+        </div>
+        <div class="table-card">
+            <table class="table table-hover">
+                <thead><tr><th>Plan Name</th><th>Type</th><th>Premium Rate</th><th>Coverage Limit</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="plan : ${plans}">
+                    <td class="fw-semibold" th:text="${plan.planName}">Name</td>
+                    <td th:text="${plan.planType}">INDIVIDUAL</td>
+                    <td th:text="'LKR ' + ${plan.premiumRate}">0.00</td>
+                    <td th:text="'LKR ' + ${plan.coverageLimit}">0.00</td>
+                    <td><span class="pill" th:classappend="${plan.status.name() == 'ACTIVE'} ? 'pill-success' : 'pill-neutral'" th:text="${plan.status}">ACTIVE</span></td>
+                    <td><a th:href="@{'/plans/' + ${plan.id}}" class="btn btn-sm btn-outline-primary">View</a></td>
+                </tr>
+                </tbody>
+            </table>
+            <div th:if="${#lists.isEmpty(plans)}" class="empty-state"><i class="bi bi-clipboard2-x"></i>No plans yet.</div>
+        </div>
+    </main>
+</div>
+</body>
+</html>
