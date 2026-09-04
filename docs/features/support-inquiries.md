@@ -11,3 +11,7 @@
 ### [PBI22] Ticket Detail Inspection & Conversation Timeline
 - Built interactive ticket detail view (	ickets/view.html).
 - Implemented chronological communication timeline between policyholder and support executive.
+
+### [PBI23 & PBI24] CRE Responses & Ticket Resolution Closure
+- Implemented support response entry by Customer Relations Executives.
+- Updated status transitions (OPEN -> IN_PROGRESS -> RESOLVED -> CLOSED).
