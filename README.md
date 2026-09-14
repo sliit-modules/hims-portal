@@ -43,12 +43,21 @@ A comprehensive enterprise health insurance management web application developed
          password: your_local_mysql_password
      ```
 
-2. **Option 2: Using Environment Variables / `.env`**
-   - Copy `.env.example`:
+2. **Option 2: Using Environment Variables**
+   - `application.yml` reads two values from the environment: `DB_USERNAME` and `DB_PASSWORD`.
+     Export them before starting the app:
      ```bash
-     cp .env.example .env
+     export DB_USERNAME=root
+     export DB_PASSWORD=your_local_mysql_password
+     mvn spring-boot:run
      ```
-   - Set `DB_USERNAME` and `DB_PASSWORD` in your local environment.
+   - In IntelliJ, set the same two under **Run → Edit Configurations → Environment variables**.
+   - See `.env.example` for the variable names.
+
+   > [!NOTE]
+   > Spring Boot does not read `.env` files by itself — there is no dotenv library on the
+   > classpath. Creating a `.env` file alone will **not** apply your credentials; the values
+   > must be real environment variables, or set directly in `application.yml`.
 
 ---
 
@@ -158,15 +167,21 @@ gitGraph
 
 Staff sign in with their **work email**; members sign in with their **NIC**.
 
-| Role | Username | Functional Scope |
-|---|---|---|
-| System Administrator | `admin@medisure.lk` | Full system oversight, audit log, user management |
-| Insurance Sales Agent | `agent@medisure.lk` | Policy issuance, renewals, dependents |
-| Claims Officer | `claims@medisure.lk` | Claim adjudication and supporting documents |
-| Underwriter | `underwriting@medisure.lk` | Risk scoring and underwriting decisions |
-| Plan Administrator | `plans@medisure.lk` | Insurance plans, limits, pricing |
-| Customer Relations | `support@medisure.lk` | Support tickets and responses |
-| Member (policyholder) | `199009098765` | Own cover, premiums, claims, dependents |
+| Role | Username | Module Owner | Functional Scope |
+|---|---|---|---|
+| Insurance Sales Agent | `agent@medisure.lk` | Lankadhikara L.R.M.M.P. | Policy issuance, renewals, dependents |
+| Claims Officer | `claims@medisure.lk` | Gunasinghe N.M. | Claim adjudication and supporting documents |
+| Underwriter | `underwriting@medisure.lk` | De Zoysa A.I. | Risk scoring and underwriting decisions |
+| Plan Administrator | `plans@medisure.lk` | Karunarathna W.M.K.U. | Insurance plans, limits, pricing |
+| Customer Relations | `support@medisure.lk` | Kavisekara K.M.H.N. | Support tickets and responses |
+| **Policyholder** | `199408089876` | Ramanayaka U.K.D. | Premium payments, receipts, auto-pay, cancellation |
+| System Administrator | `admin@medisure.lk` | *(system account)* | Full oversight, audit log, user management |
+| Policyholder (demo member) | `199009098765` | — | Own cover, premiums, claims, dependents |
+
+> Premium & Payment Management is the one module whose owner persona is the **Policyholder** —
+> paying a premium, viewing receipts, changing auto-pay and cancelling a payment are all member
+> self-service actions. Its owner therefore signs in with a **NIC** rather than a staff email,
+> against an account that holds a real policy for the payment flows to operate on.
 
 ---
 
