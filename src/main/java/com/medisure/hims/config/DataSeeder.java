@@ -133,9 +133,9 @@ public class DataSeeder implements CommandLineRunner {
         // ---------- Staff ----------
         User admin = staff("199001012345", "S. A. Fernando", LocalDate.of(1990, 1, 1), Gender.FEMALE,
                 "12 Galle Road, Colombo 03", "0771234567", "admin@medisure.lk", Role.ADMIN);
-        User salesAgent = staff("199203023456", "Lankadhikara L.R.M.M.P.", LocalDate.of(1992, 3, 2), Gender.MALE,
+        User salesAgent = staff("199203023456", "Lankadhikara L.R.M.M.P.", LocalDate.of(1992, 3, 2), Gender.FEMALE,
                 "45 Kandy Road, Kadawatha", "0772345678", "agent@medisure.lk", Role.SALES_AGENT);
-        User claimsOfficer = staff("198804034567", "Gunasinghe N.M.", LocalDate.of(1988, 4, 3), Gender.FEMALE,
+        User claimsOfficer = staff("198804034567", "Gunasinghe N.M.", LocalDate.of(1988, 4, 3), Gender.MALE,
                 "9 Negombo Road, Wattala", "0773456789", "claims@medisure.lk", Role.CLAIMS_OFFICER);
         User underwriter = staff("197505045678", "De Zoysa A.I.", LocalDate.of(1975, 5, 4), Gender.MALE,
                 "78 High Level Road, Nugegoda", "0774567890", "underwriting@medisure.lk", Role.UNDERWRITER);
