@@ -26,7 +26,10 @@ A comprehensive enterprise health insurance management web application developed
 ## ⚙️ Environment Configuration & Credential Safety
 
 > [!IMPORTANT]
-> To comply with security best practices, sensitive configuration files (`src/main/resources/application.yml` and `.env`) are **excluded from Git tracking** via `.gitignore`. Never commit database passwords or secret keys to version control.
+> To comply with security best practices, `src/main/resources/application.yml` (and any `.env`
+> file) is **excluded from Git tracking** via `.gitignore`. Never commit database passwords or
+> secret keys to version control. Each developer supplies their own credentials locally using
+> one of the two options below.
 
 ### Setting Up Local Credentials:
 
@@ -145,7 +148,8 @@ gitGraph
 
 ### Steps:
 1. Ensure MySQL is running on `localhost:3306`.
-2. Create the database:
+2. *(Optional)* Create the database — the JDBC URL uses `createDatabaseIfNotExist=true`, so the
+   application creates `hims_db` on first start if it is missing:
    ```sql
    CREATE DATABASE IF NOT EXISTS hims_db;
    ```
