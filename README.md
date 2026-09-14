@@ -8,6 +8,11 @@
 
 A comprehensive enterprise health insurance management web application developed for **MediSure Lanka Insurance PLC** as part of the **SE2030 Software Engineering** course at SLIIT.
 
+> [!TIP]
+> **Setting the project up for the first time?** Follow **[SETUP.md](./SETUP.md)** — a
+> step-by-step guide covering prerequisites, cloning, database configuration, IntelliJ setup,
+> branch syncing, demo logins and troubleshooting.
+
 ---
 
 ## 👥 Project Team & Functional Allocations
@@ -132,6 +137,7 @@ gitGraph
 
 ## 📚 Documentation Reference
 
+- **[Team Setup Guide](./SETUP.md)**: First-time setup — prerequisites, configuration, IntelliJ, branch syncing, demo logins and troubleshooting.
 - **[Project Specification](./PROJECT_SPECIFICATION.md)**: Detailed breakdown of the 6 major functions, CRUD operations, entity models, and persona mappings.
 - **[Scrum Report (Lab 02)](./SCRUM_REPORT.md)**: Complete 4-sprint plan, 24 user stories (PBI01 to PBI24), task estimation breakdowns, and sprint goals.
 - **[Feature Documentation](./docs/features)**: Per-module notes for each of the six functional areas.
