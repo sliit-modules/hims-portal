@@ -143,8 +143,10 @@ public class DataSeeder implements CommandLineRunner {
                 "22 Baseline Road, Colombo 09", "0775678901", "support@medisure.lk", Role.CRE);
         staff("198207078765", "Karunarathna W.M.K.U.", LocalDate.of(1982, 7, 7), Gender.MALE,
                 "31 Havelock Road, Colombo 05", "0776789012", "plans@medisure.lk", Role.ADMIN);
-        staff("199408089876", "Ramanayaka U.K.D.", LocalDate.of(1994, 8, 8), Gender.MALE,
-                "5 Union Place, Colombo 02", "0777890123", "payments@medisure.lk", Role.SALES_AGENT);
+        // Premium & Payment Management (Ramanayaka U.K.D.) has the Policyholder as its owner
+        // persona: making a payment, viewing receipts, changing auto-pay and cancelling a
+        // payment are all member self-service actions. He is therefore seeded below as a
+        // policyholder with his own cover, so his account can exercise the full CRUD set.
 
         // ---------- Plans ----------
         InsurancePlan familyShield = plan("MediSure Family Shield",
@@ -167,6 +169,7 @@ public class DataSeeder implements CommandLineRunner {
         // ---------- Policyholders ----------
         record Person(String nic, String name, LocalDate dob, Gender gender, String address, String phone, String email) {}
         List<Person> people = List.of(
+                new Person("199408089876", "Ramanayaka U.K.D.", LocalDate.of(1994, 8, 8), Gender.MALE, "5 Union Place, Colombo 02", "0777890123", "payments@medisure.lk"),
                 new Person("199009098765", "Kasun Perera", LocalDate.of(1990, 9, 9), Gender.MALE, "14 Lake Drive, Rajagiriya", "0778901234", "kasun.perera@example.com"),
                 new Person("199211112345", "Nadeesha Silva", LocalDate.of(1992, 11, 11), Gender.FEMALE, "8 Temple Road, Maharagama", "0712345671", "nadeesha.silva@example.com"),
                 new Person("198805123456", "Dilshan Fernando", LocalDate.of(1988, 5, 12), Gender.MALE, "102 Main Street, Moratuwa", "0712345672", "dilshan.fernando@example.com"),
