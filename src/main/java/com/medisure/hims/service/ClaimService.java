@@ -67,9 +67,19 @@ public class ClaimService {
                 .multiply(BigDecimal.valueOf(100)).doubleValue();
     }
 
+    /** A policy only accepts new claims while it is in force (active or renewed). */
+    public boolean acceptsClaims(Policy policy) {
+        return policy.getStatus() == PolicyStatus.ACTIVE || policy.getStatus() == PolicyStatus.RENEWED;
+    }
+
     public Claim submit(Policy policy, User claimant, Dependent claimantDependent, ClaimCategory category,
                          String hospitalName, LocalDate treatmentDate, String diagnosisSummary,
                          BigDecimal amountClaimed, User actor) {
+        if (!acceptsClaims(policy)) {
+            throw new IllegalStateException("Claims can only be filed against an active policy; %s is %s"
+                    .formatted(policy.getPolicyCode(), policy.getStatus()));
+        }
+        validateDetails(hospitalName, treatmentDate, diagnosisSummary, amountClaimed);
         BigDecimal remaining = remainingCoverage(policy);
         if (amountClaimed.compareTo(remaining) > 0) {
             throw new IllegalStateException(
@@ -122,5 +132,28 @@ public class ClaimService {
         claim.setStatus(ClaimStatus.WITHDRAWN);
         claimRepository.save(claim);
         auditService.log("Claim", claim.getId(), "WITHDRAWN", actor, claim.getClaimCode());
+    }
+
+    /**
+     * Mirrors the entity's constraints so a bad value comes back as a message on the form instead
+     * of failing later, when the claim is saved, with a generic error page.
+     */
+    private void validateDetails(String hospitalName, LocalDate treatmentDate, String diagnosisSummary,
+                                 BigDecimal amountClaimed) {
+        if (hospitalName == null || hospitalName.isBlank()) {
+            throw new IllegalStateException("Hospital name is required");
+        }
+        if (diagnosisSummary == null || diagnosisSummary.isBlank()) {
+            throw new IllegalStateException("Diagnosis summary is required");
+        }
+        if (treatmentDate == null) {
+            throw new IllegalStateException("Treatment date is required");
+        }
+        if (treatmentDate.isAfter(LocalDate.now())) {
+            throw new IllegalStateException("Treatment date cannot be in the future");
+        }
+        if (amountClaimed == null || amountClaimed.signum() <= 0) {
+            throw new IllegalStateException("Amount claimed must be positive");
+        }
     }
 }

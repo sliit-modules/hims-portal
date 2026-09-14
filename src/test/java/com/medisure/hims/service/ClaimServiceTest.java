@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -164,5 +165,44 @@ class ClaimServiceTest {
                 .thenReturn(List.of(settled));
 
         assertEquals(0, new BigDecimal("1850000.00").compareTo(claimService.remainingCoverage(policy)));
+    }
+
+    @Test
+    @DisplayName("A member can file a claim within the remaining cover on an active policy")
+    void submitsClaimWithinCoverage() {
+        when(claimRepository.findByPolicyAndStatus(policy, ClaimStatus.APPROVED)).thenReturn(List.of());
+        when(codeGenerator.nextClaimCode()).thenReturn("CLM-2026-000002");
+        when(claimRepository.save(any(Claim.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Claim claim = claimService.submit(policy, policyholder, null, ClaimCategory.SURGERY, "Asiri Surgical",
+                LocalDate.now().minusDays(3), "Appendectomy", new BigDecimal("120000.00"), policyholder);
+
+        assertEquals(ClaimStatus.SUBMITTED, claim.getStatus());
+        assertEquals("CLM-2026-000002", claim.getClaimCode());
+        verify(auditService).log(eq("Claim"), any(), eq("SUBMITTED"), eq(policyholder), eq("CLM-2026-000002"));
+    }
+
+    @Test
+    @DisplayName("Claims cannot be filed against a cancelled policy")
+    void refusesClaimOnCancelledPolicy() {
+        policy.setStatus(PolicyStatus.CANCELLED);
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> claimService.submit(policy, policyholder, null, ClaimCategory.DENTAL, "City Dental",
+                        LocalDate.now(), "Filling", new BigDecimal("5000.00"), policyholder));
+
+        assertTrue(ex.getMessage().contains("active policy"));
+        verify(claimRepository, never()).save(any(Claim.class));
+    }
+
+    @Test
+    @DisplayName("A treatment date in the future is refused with a clear message")
+    void refusesFutureTreatmentDate() {
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> claimService.submit(policy, policyholder, null, ClaimCategory.EMERGENCY, "Nawaloka Hospital",
+                        LocalDate.now().plusDays(1), "Fracture", new BigDecimal("40000.00"), policyholder));
+
+        assertTrue(ex.getMessage().contains("future"));
+        verify(claimRepository, never()).save(any(Claim.class));
     }
 }

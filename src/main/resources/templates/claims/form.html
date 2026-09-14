@@ -14,8 +14,12 @@
             </div>
         </div>
         <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+        <div class="alert alert-warning" th:unless="${policyInForce}">
+            <i class="bi bi-exclamation-triangle"></i>
+            This policy is <strong th:text="${policy.status}">CANCELLED</strong>, so no new claims can be filed against it.
+        </div>
 
-        <form th:action="@{/claims}" method="post" enctype="multipart/form-data" class="section-card">
+        <form th:if="${policyInForce}" th:action="@{/claims}" method="post" enctype="multipart/form-data" class="section-card">
             <input type="hidden" name="policyId" th:value="${policy.id}"/>
 
             <div class="mb-2" th:if="${not #lists.isEmpty(policy.dependents)}">
@@ -36,7 +40,8 @@
                 </div>
                 <div class="col-md-6 mb-2">
                     <label class="form-label">Treatment Date</label>
-                    <input type="date" name="treatmentDate" class="form-control" required/>
+                    <input type="date" name="treatmentDate" class="form-control" required
+                           th:max="${#temporals.format(#temporals.createToday(), 'yyyy-MM-dd')}"/>
                 </div>
             </div>
             <div class="mb-2">

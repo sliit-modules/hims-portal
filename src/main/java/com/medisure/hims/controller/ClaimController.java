@@ -47,6 +47,7 @@ public class ClaimController {
         Policy policy = policyService.findById(policyId);
         policyService.assertVisible(policy, principal.getUser());
         model.addAttribute("policy", policy);
+        model.addAttribute("policyInForce", claimService.acceptsClaims(policy));
         model.addAttribute("remainingCoverage", claimService.remainingCoverage(policy));
         return "claims/form";
     }
@@ -66,12 +67,16 @@ public class ClaimController {
                     .filter(d -> d.getId().equals(claimantDependentId)).findFirst().orElse(null);
         }
         try {
+            // Reject bad attachments before the claim exists, so a failed upload never leaves a
+            // half-filed claim behind that the member might then file a second time.
+            documentService.validateAll(documents);
             Claim claim = claimService.submit(policy, policy.getPolicyholder(), dependent, category, hospitalName,
                     treatmentDate, diagnosisSummary, amountClaimed, principal.getUser());
             documentService.storeAll(claim, documents, principal.getUser());
             return "redirect:/claims/" + claim.getId();
         } catch (IllegalStateException ex) {
             model.addAttribute("policy", policy);
+            model.addAttribute("policyInForce", claimService.acceptsClaims(policy));
             model.addAttribute("remainingCoverage", claimService.remainingCoverage(policy));
             model.addAttribute("errorMessage", ex.getMessage());
             return "claims/form";
