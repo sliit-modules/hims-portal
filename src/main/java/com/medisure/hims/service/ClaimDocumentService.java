@@ -88,17 +88,24 @@ public class ClaimDocumentService {
         return stored;
     }
 
+    /**
+     * Checks every non-empty file up front, so a caller can reject a bad attachment before saving
+     * anything and a claim is never left half-filed.
+     */
+    public void validateAll(MultipartFile[] files) {
+        if (files == null) {
+            return;
+        }
+        for (MultipartFile file : files) {
+            if (file != null && !file.isEmpty()) {
+                validate(file);
+            }
+        }
+    }
+
     public ClaimDocument store(Claim claim, MultipartFile file, User actor) {
-        if (file.getSize() > MAX_BYTES) {
-            throw new IllegalStateException(
-                    "%s is larger than the 5 MB limit".formatted(file.getOriginalFilename()));
-        }
+        validate(file);
         String extension = extensionOf(file.getOriginalFilename());
-        if (!ALLOWED_EXTENSIONS.contains(extension)
-                || file.getContentType() == null
-                || !ALLOWED_TYPES.contains(file.getContentType().toLowerCase(Locale.ROOT))) {
-            throw new IllegalStateException("Only PDF, JPG and PNG files can be attached to a claim");
-        }
 
         String storedName = UUID.randomUUID() + "." + extension;
         Path claimDir = uploadRoot.resolve("claims").resolve(String.valueOf(claim.getId())).normalize();
@@ -154,6 +161,19 @@ public class ClaimDocumentService {
         }
         auditService.log("ClaimDocument", document.getId(), "DELETED", actor, document.getOriginalFileName());
         documentRepository.delete(document);
+    }
+
+    private void validate(MultipartFile file) {
+        if (file.getSize() > MAX_BYTES) {
+            throw new IllegalStateException(
+                    "%s is larger than the 5 MB limit".formatted(file.getOriginalFilename()));
+        }
+        String extension = extensionOf(file.getOriginalFilename());
+        if (!ALLOWED_EXTENSIONS.contains(extension)
+                || file.getContentType() == null
+                || !ALLOWED_TYPES.contains(file.getContentType().toLowerCase(Locale.ROOT))) {
+            throw new IllegalStateException("Only PDF, JPG and PNG files can be attached to a claim");
+        }
     }
 
     private String extensionOf(String filename) {
