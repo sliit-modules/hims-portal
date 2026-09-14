@@ -26,7 +26,10 @@ A comprehensive enterprise health insurance management web application developed
 ## ⚙️ Environment Configuration & Credential Safety
 
 > [!IMPORTANT]
-> To comply with security best practices, sensitive configuration files (`src/main/resources/application.yml` and `.env`) are **excluded from Git tracking** via `.gitignore`. Never commit database passwords or secret keys to version control.
+> To comply with security best practices, `src/main/resources/application.yml` (and any `.env`
+> file) is **excluded from Git tracking** via `.gitignore`. Never commit database passwords or
+> secret keys to version control. Each developer supplies their own credentials locally using
+> one of the two options below.
 
 ### Setting Up Local Credentials:
 
@@ -43,12 +46,21 @@ A comprehensive enterprise health insurance management web application developed
          password: your_local_mysql_password
      ```
 
-2. **Option 2: Using Environment Variables / `.env`**
-   - Copy `.env.example`:
+2. **Option 2: Using Environment Variables**
+   - `application.yml` reads two values from the environment: `DB_USERNAME` and `DB_PASSWORD`.
+     Export them before starting the app:
      ```bash
-     cp .env.example .env
+     export DB_USERNAME=root
+     export DB_PASSWORD=your_local_mysql_password
+     mvn spring-boot:run
      ```
-   - Set `DB_USERNAME` and `DB_PASSWORD` in your local environment.
+   - In IntelliJ, set the same two under **Run → Edit Configurations → Environment variables**.
+   - See `.env.example` for the variable names.
+
+   > [!NOTE]
+   > Spring Boot does not read `.env` files by itself — there is no dotenv library on the
+   > classpath. Creating a `.env` file alone will **not** apply your credentials; the values
+   > must be real environment variables, or set directly in `application.yml`.
 
 ---
 
@@ -120,9 +132,10 @@ gitGraph
 
 ## 📚 Documentation Reference
 
-- **[Project Specification](file:///F:/repos/hims-portal/PROJECT_SPECIFICATION.md)**: Detailed breakdown of the 6 major functions, CRUD operations, entity models, and persona mappings.
-- **[Scrum Report (Lab 02)](file:///F:/repos/hims-portal/SCRUM_REPORT.md)**: Complete 4-sprint plan, 24 user stories (PBI01 to PBI24), task estimation breakdowns, and sprint goals.
-- **Activity Diagrams (Lab 04)**: Found in `MediSure activity diagrams Lab04.pdf`, covering the UML activity diagrams for all six system processes.
+- **[Project Specification](./PROJECT_SPECIFICATION.md)**: Detailed breakdown of the 6 major functions, CRUD operations, entity models, and persona mappings.
+- **[Scrum Report (Lab 02)](./SCRUM_REPORT.md)**: Complete 4-sprint plan, 24 user stories (PBI01 to PBI24), task estimation breakdowns, and sprint goals.
+- **[Feature Documentation](./docs/features)**: Per-module notes for each of the six functional areas.
+- **Activity Diagrams (Lab 04)**: See `MediSure activity diagrams Lab04.pdf`, covering the UML activity diagrams for all six system processes.
 
 ---
 
@@ -135,7 +148,8 @@ gitGraph
 
 ### Steps:
 1. Ensure MySQL is running on `localhost:3306`.
-2. Create the database:
+2. *(Optional)* Create the database — the JDBC URL uses `createDatabaseIfNotExist=true`, so the
+   application creates `hims_db` on first start if it is missing:
    ```sql
    CREATE DATABASE IF NOT EXISTS hims_db;
    ```
@@ -146,3 +160,44 @@ gitGraph
    ```
 5. Access the application in your browser at `http://localhost:8080`.
 6. Demo credentials for all seeded accounts: `password123`.
+
+> On first run the seeder populates a full year of demo data — members, plans, policies,
+> premium payments, claims with generated supporting documents, and support tickets.
+> It only runs when the database is **empty**, so drop `hims_db` if you want to reseed.
+
+---
+
+## 🔑 Signing In
+
+Staff sign in with their **work email**; members sign in with their **NIC**.
+
+| Role | Username | Module Owner | Functional Scope |
+|---|---|---|---|
+| Insurance Sales Agent | `agent@medisure.lk` | Lankadhikara L.R.M.M.P. | Policy issuance, renewals, dependents |
+| Claims Officer | `claims@medisure.lk` | Gunasinghe N.M. | Claim adjudication and supporting documents |
+| Underwriter | `underwriting@medisure.lk` | De Zoysa A.I. | Risk scoring and underwriting decisions |
+| Plan Administrator | `plans@medisure.lk` | Karunarathna W.M.K.U. | Insurance plans, limits, pricing |
+| Customer Relations | `support@medisure.lk` | Kavisekara K.M.H.N. | Support tickets and responses |
+| **Policyholder** | `199408089876` | Ramanayaka U.K.D. | Premium payments, receipts, auto-pay, cancellation |
+| System Administrator | `admin@medisure.lk` | *(system account)* | Full oversight, audit log, user management |
+| Policyholder (demo member) | `199009098765` | — | Own cover, premiums, claims, dependents |
+
+> Premium & Payment Management is the one module whose owner persona is the **Policyholder** —
+> paying a premium, viewing receipts, changing auto-pay and cancelling a payment are all member
+> self-service actions. Its owner therefore signs in with a **NIC** rather than a staff email,
+> against an account that holds a real policy for the payment flows to operate on.
+
+---
+
+## 🧪 Running the Tests
+
+The service layer is covered by Mockito unit tests — 34 tests across all six modules:
+
+```bash
+mvn test
+```
+
+These assert the real business rules rather than just wiring: claims are rejected when they
+exceed a policy's remaining cover, only a claims officer may adjudicate, a covered dependent
+aged 18 or over must have a NIC, the underwriting loading is applied to the base premium at
+issue, and premium due dates roll forward by the correct billing frequency.
