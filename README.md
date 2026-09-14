@@ -120,9 +120,10 @@ gitGraph
 
 ## 📚 Documentation Reference
 
-- **[Project Specification](file:///F:/repos/hims-portal/PROJECT_SPECIFICATION.md)**: Detailed breakdown of the 6 major functions, CRUD operations, entity models, and persona mappings.
-- **[Scrum Report (Lab 02)](file:///F:/repos/hims-portal/SCRUM_REPORT.md)**: Complete 4-sprint plan, 24 user stories (PBI01 to PBI24), task estimation breakdowns, and sprint goals.
-- **Activity Diagrams (Lab 04)**: Found in `MediSure activity diagrams Lab04.pdf`, covering the UML activity diagrams for all six system processes.
+- **[Project Specification](./PROJECT_SPECIFICATION.md)**: Detailed breakdown of the 6 major functions, CRUD operations, entity models, and persona mappings.
+- **[Scrum Report (Lab 02)](./SCRUM_REPORT.md)**: Complete 4-sprint plan, 24 user stories (PBI01 to PBI24), task estimation breakdowns, and sprint goals.
+- **[Feature Documentation](./docs/features)**: Per-module notes for each of the six functional areas.
+- **Activity Diagrams (Lab 04)**: See `MediSure activity diagrams Lab04.pdf`, covering the UML activity diagrams for all six system processes.
 
 ---
 
@@ -146,3 +147,38 @@ gitGraph
    ```
 5. Access the application in your browser at `http://localhost:8080`.
 6. Demo credentials for all seeded accounts: `password123`.
+
+> On first run the seeder populates a full year of demo data — members, plans, policies,
+> premium payments, claims with generated supporting documents, and support tickets.
+> It only runs when the database is **empty**, so drop `hims_db` if you want to reseed.
+
+---
+
+## 🔑 Signing In
+
+Staff sign in with their **work email**; members sign in with their **NIC**.
+
+| Role | Username | Functional Scope |
+|---|---|---|
+| System Administrator | `admin@medisure.lk` | Full system oversight, audit log, user management |
+| Insurance Sales Agent | `agent@medisure.lk` | Policy issuance, renewals, dependents |
+| Claims Officer | `claims@medisure.lk` | Claim adjudication and supporting documents |
+| Underwriter | `underwriting@medisure.lk` | Risk scoring and underwriting decisions |
+| Plan Administrator | `plans@medisure.lk` | Insurance plans, limits, pricing |
+| Customer Relations | `support@medisure.lk` | Support tickets and responses |
+| Member (policyholder) | `199009098765` | Own cover, premiums, claims, dependents |
+
+---
+
+## 🧪 Running the Tests
+
+The service layer is covered by Mockito unit tests — 34 tests across all six modules:
+
+```bash
+mvn test
+```
+
+These assert the real business rules rather than just wiring: claims are rejected when they
+exceed a policy's remaining cover, only a claims officer may adjudicate, a covered dependent
+aged 18 or over must have a NIC, the underwriting loading is applied to the base premium at
+issue, and premium due dates roll forward by the correct billing frequency.
