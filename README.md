@@ -178,14 +178,16 @@ Staff sign in with their **work email**; members sign in with their **NIC**.
 | Underwriter | `underwriting@medisure.lk` | De Zoysa A.I. | Risk scoring and underwriting decisions |
 | Plan Administrator | `plans@medisure.lk` | Karunarathna W.M.K.U. | Insurance plans, limits, pricing |
 | Customer Relations | `support@medisure.lk` | Kavisekara K.M.H.N. | Support tickets and responses |
-| **Policyholder** | `199408089876` | Ramanayaka U.K.D. | Premium payments, receipts, auto-pay, cancellation |
+| **Policyholder** | `199408089876` | Ramanayaka U.K.D. | Premium payments, receipts, auto-pay, refund requests |
 | System Administrator | `admin@medisure.lk` | *(system account)* | Full oversight, audit log, user management |
 | Policyholder (demo member) | `199009098765` | — | Own cover, premiums, claims, dependents |
 
 > Premium & Payment Management is the one module whose owner persona is the **Policyholder** —
-> paying a premium, viewing receipts, changing auto-pay and cancelling a payment are all member
+> paying a premium, viewing receipts, changing auto-pay and requesting a refund are all member
 > self-service actions. Its owner therefore signs in with a **NIC** rather than a staff email,
-> against an account that holds a real policy for the payment flows to operate on.
+> against an account that holds a real policy for the payment flows to operate on. A refund
+> request is approved or rejected by an admin or claims officer, and only staff can void a
+> payment recorded in error.
 
 ---
 
