@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<!--/* Shared error page for every module, used instead of Spring Boot's default error page. */-->
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title='Something went wrong')}"></head>
+<body>
+<main class="container d-flex align-items-center justify-content-center" style="min-height:100vh;">
+    <div class="section-card text-center p-5" style="max-width:520px;" th:with="code=${status ?: 500}">
+        <div class="display-4 fw-bold text-primary" th:text="${code}">500</div>
+        <h4 class="mt-2" th:switch="${code}">
+            <span th:case="403">You don't have access to this page</span>
+            <span th:case="404">We couldn't find what you were looking for</span>
+            <span th:case="400">That request wasn't valid</span>
+            <span th:case="*">Something went wrong</span>
+        </h4>
+        <p class="text-muted mt-2 mb-0" th:switch="${code}">
+            <span th:case="403">This page belongs to a different role. If you think you should have access, contact your system administrator.</span>
+            <span th:case="404">The record may have been removed, or the link may be out of date.</span>
+            <span th:case="400">Some of the information sent was missing or in the wrong format. Go back and check the form.</span>
+            <span th:case="*">The problem has been logged. Please try again, or return to your dashboard.</span>
+        </p>
+        <div class="d-flex gap-2 justify-content-center mt-4">
+            <a href="javascript:history.back()" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Back</a>
+            <a href="/dashboard" class="btn btn-primary"><i class="bi bi-house"></i> Dashboard</a>
+        </div>
+    </div>
+</main>
+</body>
+</html>

@@ -6,17 +6,17 @@
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
     <main class="content" style="max-width:600px;">
-        <h3 class="mb-3">Issue Policy from <span th:text="${application.applicationCode}"></span></h3>
+        <h3 class="mb-3">Issue Policy from <span th:text="${underwritingApp.applicationCode}"></span></h3>
         <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
         <div class="card p-3 mb-3">
             <dl class="row mb-0">
-                <dt class="col-sm-5">Policyholder</dt><dd class="col-sm-7" th:text="${application.applicant.fullName}"></dd>
-                <dt class="col-sm-5">Plan</dt><dd class="col-sm-7" th:text="${application.requestedPlan.planName}"></dd>
-                <dt class="col-sm-5">Base Premium Rate</dt><dd class="col-sm-7" th:text="${application.requestedPlan.premiumRate}"></dd>
-                <dt class="col-sm-5">Premium Loading</dt><dd class="col-sm-7" th:text="${application.premiumLoadingPercent} + '%'"></dd>
+                <dt class="col-sm-5">Policyholder</dt><dd class="col-sm-7" th:text="${underwritingApp.applicant.fullName}"></dd>
+                <dt class="col-sm-5">Plan</dt><dd class="col-sm-7" th:text="${underwritingApp.requestedPlan.planName}"></dd>
+                <dt class="col-sm-5">Base Premium Rate</dt><dd class="col-sm-7" th:text="${underwritingApp.requestedPlan.premiumRate}"></dd>
+                <dt class="col-sm-5">Premium Loading</dt><dd class="col-sm-7" th:text="${underwritingApp.premiumLoadingPercent} + '%'"></dd>
             </dl>
         </div>
-        <form th:action="@{'/policies/issue/' + ${application.id}}" method="post" class="card p-4">
+        <form th:action="@{'/policies/issue/' + ${underwritingApp.id}}" method="post" class="card p-4">
             <div class="mb-3">
                 <label class="form-label">Premium Billing Frequency</label>
                 <select name="premiumFrequency" class="form-select" required>
@@ -24,7 +24,7 @@
                 </select>
             </div>
             <button type="submit" class="btn btn-success">Issue Policy</button>
-            <a th:href="@{'/underwriting/' + ${application.id}}" class="btn btn-link">Cancel</a>
+            <a th:href="@{'/underwriting/' + ${underwritingApp.id}}" class="btn btn-link">Cancel</a>
         </form>
     </main>
 </div>
