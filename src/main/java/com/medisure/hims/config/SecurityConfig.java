@@ -49,6 +49,9 @@ public class SecurityConfig {
                     .hasAnyRole("POLICYHOLDER", "SALES_AGENT", "CLAIMS_OFFICER", "ADMIN")
 
                 .requestMatchers(HttpMethod.GET, "/payments/**").hasAnyRole("POLICYHOLDER", "ADMIN", "CLAIMS_OFFICER", "SALES_AGENT")
+                .requestMatchers(HttpMethod.POST, "/payments/*/refund-decision", "/payments/*/void")
+                    .hasAnyRole("CLAIMS_OFFICER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/payments/*/refund-request").hasRole("POLICYHOLDER")
                 .requestMatchers(HttpMethod.POST, "/payments/**").hasAnyRole("POLICYHOLDER", "ADMIN")
 
                 .requestMatchers("/tickets/**")

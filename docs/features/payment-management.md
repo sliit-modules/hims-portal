@@ -24,11 +24,27 @@
   far `nextDueDate` moves after each payment.
 
 ### [PBI16] Payment Refund & Transaction Voiding
-- `PaymentService.cancelOrRefund(id, newStatus, actor)` handles both refunds and cancellations
-  for duplicate or overcharged transactions.
-- Ownership is enforced by `assertOwner(...)`: a policyholder can only act on payments
+- Originally a policyholder could mark their own payment REFUNDED or CANCELLED directly.
+  That was replaced in Sprint 5 by PBI25 below, so no member can move money on their own.
+- Ownership is enforced by `assertOwner(...)`: a policyholder can only view payments
   belonging to their own policies.
 - Every state change is written to the audit log.
+
+### [PBI25] Staff-Approved Refunds (Sprint 5)
+- **Request (policyholder):** `requestRefund(id, reason, actor)` — only the policy's own holder,
+  only for a `PAID` payment, one pending request at a time, and a reason is required. The payment
+  stays `PAID` while the request waits.
+- **Decide (admin or claims officer):** `decideRefund(id, approve, notes, actor)` — approving sets
+  the status to `REFUNDED`; rejecting keeps it `PAID` and requires notes. Who decided, when and
+  why are stored on the payment and in the audit log.
+- **Void (admin or claims officer):** `voidPayment(id, reason, actor)` replaces the member's old
+  Cancel button. It is for a payment recorded in error (e.g. a duplicate) and needs a reason;
+  the status becomes `CANCELLED`.
+- Staff see a banner on the payments list with the number of pending requests and a
+  "Review requests" filter (`/payments?refunds=pending`).
+- The request is stored in new nullable columns on `payments` (`refund_requested_at`,
+  `refund_reason`, `refund_decided_by_id`, `refund_decided_at`, `refund_decision_notes`,
+  `void_reason`), so existing databases update automatically — no status value was added.
 
 ## Demo Account
 This module's owner persona is the **Policyholder** — every operation below is a member
@@ -41,4 +57,7 @@ operations can be demonstrated against real cover:
 | **C** | Make a premium payment | Policy page → *Pay Premium* |
 | **R** | View payment history and receipts | Payments list → receipt view |
 | **U** | Change payment method / auto-pay | Receipt view → *Change Method / Auto-Pay* |
-| **D** | Cancel or refund a payment | Receipt view → *Cancel* / *Refund* |
+| **D** | Request a refund | Receipt view → *Request a Refund* (then approved or rejected by staff) |
+
+To show the approval step, sign in as `claims@medisure.lk` or `admin@medisure.lk`, open
+*Payments → Review requests*, and approve or reject the request.

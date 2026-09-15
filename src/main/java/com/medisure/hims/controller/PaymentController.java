@@ -10,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Controller
 @RequestMapping("/payments")
@@ -24,8 +25,15 @@ public class PaymentController {
     }
 
     @GetMapping
-    public String list(@AuthenticationPrincipal UserPrincipal principal, Model model) {
-        model.addAttribute("payments", paymentService.findAllFor(principal.getUser()));
+    public String list(@RequestParam(required = false) String refunds,
+                       @AuthenticationPrincipal UserPrincipal principal, Model model) {
+        User user = principal.getUser();
+        boolean reviewer = user.getRole() == Role.ADMIN || user.getRole() == Role.CLAIMS_OFFICER;
+        boolean pendingOnly = reviewer && "pending".equals(refunds);
+        List<Payment> payments = pendingOnly ? paymentService.pendingRefunds() : paymentService.findAllFor(user);
+        model.addAttribute("payments", payments);
+        model.addAttribute("pendingRefundFilter", pendingOnly);
+        model.addAttribute("pendingRefundCount", reviewer ? paymentService.pendingRefunds().size() : 0);
         return "payments/list";
     }
 
@@ -66,15 +74,44 @@ public class PaymentController {
         return "redirect:/payments/" + id;
     }
 
-    @PostMapping("/{id}/cancel")
-    public String cancel(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal) {
-        paymentService.cancelOrRefund(id, PaymentStatus.CANCELLED, principal.getUser());
+    @PostMapping("/{id}/refund-request")
+    public String requestRefund(@PathVariable Long id, @RequestParam(required = false) String reason,
+                                 @AuthenticationPrincipal UserPrincipal principal, Model model) {
+        try {
+            paymentService.requestRefund(id, reason, principal.getUser());
+        } catch (IllegalStateException ex) {
+            return showWithError(id, ex, model);
+        }
         return "redirect:/payments/" + id;
     }
 
-    @PostMapping("/{id}/refund")
-    public String refund(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal) {
-        paymentService.cancelOrRefund(id, PaymentStatus.REFUNDED, principal.getUser());
+    @PostMapping("/{id}/refund-decision")
+    public String decideRefund(@PathVariable Long id, @RequestParam boolean approve,
+                                @RequestParam(required = false) String notes,
+                                @AuthenticationPrincipal UserPrincipal principal, Model model) {
+        try {
+            paymentService.decideRefund(id, approve, notes, principal.getUser());
+        } catch (IllegalStateException ex) {
+            return showWithError(id, ex, model);
+        }
         return "redirect:/payments/" + id;
+    }
+
+    @PostMapping("/{id}/void")
+    public String voidPayment(@PathVariable Long id, @RequestParam(required = false) String reason,
+                               @AuthenticationPrincipal UserPrincipal principal, Model model) {
+        try {
+            paymentService.voidPayment(id, reason, principal.getUser());
+        } catch (IllegalStateException ex) {
+            return showWithError(id, ex, model);
+        }
+        return "redirect:/payments/" + id;
+    }
+
+    private String showWithError(Long id, IllegalStateException ex, Model model) {
+        model.addAttribute("payment", paymentService.findById(id));
+        model.addAttribute("methods", PaymentMethod.values());
+        model.addAttribute("errorMessage", ex.getMessage());
+        return "payments/view";
     }
 }
