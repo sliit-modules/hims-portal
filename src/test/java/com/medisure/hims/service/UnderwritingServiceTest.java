@@ -135,4 +135,41 @@ class UnderwritingServiceTest {
         assertEquals(2, submitted.getNumDependentsPlanned());
         verify(auditService).log(eq("UnderwritingApplication"), any(), eq("SUBMITTED"), eq(applicant), any());
     }
+
+    @Test
+    @DisplayName("An application that has already been decided cannot be decided again")
+    void refusesSecondDecision() {
+        application.setDecision(ApplicationDecision.APPROVED);
+        when(applicationRepository.findById(1L)).thenReturn(Optional.of(application));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> underwritingService.decide(
+                1L, ApplicationDecision.REJECTED, 50, BigDecimal.ZERO, testUnderwriter));
+
+        assertTrue(ex.getMessage().contains("already been decided"));
+        verify(applicationRepository, never()).save(any(UnderwritingApplication.class));
+    }
+
+    @Test
+    @DisplayName("A missing risk score or one outside 0-100 is refused with a clear message")
+    void refusesInvalidRiskScore() {
+        when(applicationRepository.findById(1L)).thenReturn(Optional.of(application));
+
+        assertThrows(IllegalStateException.class, () -> underwritingService.decide(
+                1L, ApplicationDecision.APPROVED, 150, BigDecimal.ZERO, testUnderwriter));
+        assertThrows(IllegalStateException.class, () -> underwritingService.decide(
+                1L, ApplicationDecision.APPROVED, null, BigDecimal.ZERO, testUnderwriter));
+        verify(applicationRepository, never()).save(any(UnderwritingApplication.class));
+    }
+
+    @Test
+    @DisplayName("A negative premium loading is refused")
+    void refusesNegativeLoading() {
+        when(applicationRepository.findById(1L)).thenReturn(Optional.of(application));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () -> underwritingService.decide(
+                1L, ApplicationDecision.APPROVED, 30, new BigDecimal("-5"), testUnderwriter));
+
+        assertTrue(ex.getMessage().contains("zero or more"));
+        verify(applicationRepository, never()).save(any(UnderwritingApplication.class));
+    }
 }

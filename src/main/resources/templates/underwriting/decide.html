@@ -6,16 +6,17 @@
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
     <main class="content" style="max-width:600px;">
-        <h3 class="mb-3">Decide: <span th:text="${application.applicationCode}"></span></h3>
+        <h3 class="mb-3">Decide: <span th:text="${underwritingApp.applicationCode}"></span></h3>
+        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
         <div class="card p-3 mb-3">
             <dl class="row mb-0">
-                <dt class="col-sm-4">Applicant</dt><dd class="col-sm-8" th:text="${application.applicant.fullName}"></dd>
-                <dt class="col-sm-4">Age</dt><dd class="col-sm-8" th:text="${application.applicantAge}"></dd>
-                <dt class="col-sm-4">Pre-existing Conditions</dt><dd class="col-sm-8" th:text="${application.hasPreExistingConditions} ? 'Yes — ' + ${application.conditionsNotes} : 'No'"></dd>
-                <dt class="col-sm-4">Plan Coverage Limit</dt><dd class="col-sm-8" th:text="${application.requestedPlan.coverageLimit}"></dd>
+                <dt class="col-sm-4">Applicant</dt><dd class="col-sm-8" th:text="${underwritingApp.applicant.fullName}"></dd>
+                <dt class="col-sm-4">Age</dt><dd class="col-sm-8" th:text="${underwritingApp.applicantAge}"></dd>
+                <dt class="col-sm-4">Pre-existing Conditions</dt><dd class="col-sm-8" th:text="${underwritingApp.hasPreExistingConditions} ? 'Yes — ' + ${underwritingApp.conditionsNotes} : 'No'"></dd>
+                <dt class="col-sm-4">Plan Coverage Limit</dt><dd class="col-sm-8" th:text="${underwritingApp.requestedPlan.coverageLimit}"></dd>
             </dl>
         </div>
-        <form th:action="@{'/underwriting/' + ${application.id} + '/decide'}" method="post" class="card p-4">
+        <form th:action="@{'/underwriting/' + ${underwritingApp.id} + '/decide'}" method="post" class="card p-4">
             <div class="mb-2">
                 <label class="form-label">Decision</label>
                 <select name="decision" class="form-select" required>
@@ -32,7 +33,7 @@
                 <input type="number" step="0.01" name="premiumLoadingPercent" class="form-control" min="0" value="0" required/>
             </div>
             <button type="submit" class="btn btn-primary">Submit Decision</button>
-            <a th:href="@{'/underwriting/' + ${application.id}}" class="btn btn-link">Cancel</a>
+            <a th:href="@{'/underwriting/' + ${underwritingApp.id}}" class="btn btn-link">Cancel</a>
         </form>
     </main>
 </div>

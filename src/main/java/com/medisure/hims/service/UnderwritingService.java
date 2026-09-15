@@ -42,6 +42,9 @@ public class UnderwritingService {
 
     public UnderwritingApplication submit(User applicant, InsurancePlan plan, boolean hasPreExisting,
                                            String conditionsNotes, int numDependentsPlanned, User actor) {
+        if (numDependentsPlanned < 0) {
+            throw new IllegalStateException("Number of dependents cannot be negative");
+        }
         UnderwritingApplication app = new UnderwritingApplication();
         app.setApplicationCode(codeGenerator.nextApplicationCode());
         app.setApplicant(applicant);
@@ -56,12 +59,24 @@ public class UnderwritingService {
         return saved;
     }
 
-    public UnderwritingApplication decide(Long id, ApplicationDecision decision, int riskScore,
+    public UnderwritingApplication decide(Long id, ApplicationDecision decision, Integer riskScore,
                                            java.math.BigDecimal premiumLoadingPercent, User actor) {
         if (actor.getRole() != Role.UNDERWRITER && actor.getRole() != Role.ADMIN) {
             throw new AccessDeniedException("Only underwriters can decide applications");
         }
         UnderwritingApplication app = findById(id);
+        if (app.getDecision() != ApplicationDecision.PENDING) {
+            throw new IllegalStateException("This application has already been decided");
+        }
+        if (decision == null || decision == ApplicationDecision.PENDING) {
+            throw new IllegalStateException("Choose whether to approve or reject the application");
+        }
+        if (riskScore == null || riskScore < 0 || riskScore > 100) {
+            throw new IllegalStateException("Risk score must be a number from 0 to 100");
+        }
+        if (premiumLoadingPercent == null || premiumLoadingPercent.signum() < 0) {
+            throw new IllegalStateException("Premium loading must be zero or more");
+        }
         app.setDecision(decision);
         app.setRiskScore(riskScore);
         app.setPremiumLoadingPercent(premiumLoadingPercent);

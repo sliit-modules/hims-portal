@@ -9,9 +9,15 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 
+/**
+ * Underwriting pages. The application is exposed to views as "underwritingApp", never
+ * "application": Thymeleaf reserves ${application} for the servlet context, so a model
+ * attribute with that name always resolves to null in templates.
+ */
 @Controller
 @RequestMapping("/underwriting")
 public class UnderwritingController {
@@ -35,8 +41,7 @@ public class UnderwritingController {
 
     @GetMapping("/new")
     public String newForm(@AuthenticationPrincipal UserPrincipal principal, Model model) {
-        model.addAttribute("plans", planService.findActive());
-        model.addAttribute("isAgent", principal.getUser().getRole() != Role.POLICYHOLDER);
+        addFormOptions(principal.getUser(), model);
         return "underwriting/form";
     }
 
@@ -49,13 +54,19 @@ public class UnderwritingController {
                           @RequestParam(defaultValue = "0") int numDependentsPlanned,
                           Model model) {
         User actor = principal.getUser();
-        User applicant = actor;
-        if (actor.getRole() != Role.POLICYHOLDER && applicantNic != null && !applicantNic.isBlank()) {
-            applicant = userService.findByNic(applicantNic);
+        try {
+            User applicant = actor;
+            if (actor.getRole() != Role.POLICYHOLDER && applicantNic != null && !applicantNic.isBlank()) {
+                applicant = findApplicant(applicantNic.trim());
+            }
+            InsurancePlan plan = planService.findById(planId);
+            underwritingService.submit(applicant, plan, hasPreExistingConditions, conditionsNotes,
+                    numDependentsPlanned, actor);
+        } catch (IllegalStateException ex) {
+            addFormOptions(actor, model);
+            model.addAttribute("errorMessage", ex.getMessage());
+            return "underwriting/form";
         }
-        InsurancePlan plan = planService.findById(planId);
-        underwritingService.submit(applicant, plan, hasPreExistingConditions, conditionsNotes,
-                numDependentsPlanned, actor);
         return "redirect:/underwriting";
     }
 
@@ -63,21 +74,45 @@ public class UnderwritingController {
     public String view(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal, Model model) {
         UnderwritingApplication app = underwritingService.findById(id);
         underwritingService.assertVisible(app, principal.getUser());
-        model.addAttribute("application", app);
+        model.addAttribute("underwritingApp", app);
         return "underwriting/view";
     }
 
     @GetMapping("/{id}/decide")
     public String decideForm(@PathVariable Long id, Model model) {
-        model.addAttribute("application", underwritingService.findById(id));
+        UnderwritingApplication app = underwritingService.findById(id);
+        if (app.getDecision() != ApplicationDecision.PENDING) {
+            return "redirect:/underwriting/" + id;
+        }
+        model.addAttribute("underwritingApp", app);
         return "underwriting/decide";
     }
 
     @PostMapping("/{id}/decide")
     public String decide(@PathVariable Long id, @RequestParam ApplicationDecision decision,
-                          @RequestParam int riskScore, @RequestParam BigDecimal premiumLoadingPercent,
-                          @AuthenticationPrincipal UserPrincipal principal) {
-        underwritingService.decide(id, decision, riskScore, premiumLoadingPercent, principal.getUser());
+                          @RequestParam(required = false) Integer riskScore,
+                          @RequestParam(required = false) BigDecimal premiumLoadingPercent,
+                          @AuthenticationPrincipal UserPrincipal principal, Model model) {
+        try {
+            underwritingService.decide(id, decision, riskScore, premiumLoadingPercent, principal.getUser());
+        } catch (IllegalStateException ex) {
+            model.addAttribute("underwritingApp", underwritingService.findById(id));
+            model.addAttribute("errorMessage", ex.getMessage());
+            return "underwriting/decide";
+        }
         return "redirect:/underwriting/" + id;
+    }
+
+    private void addFormOptions(User actor, Model model) {
+        model.addAttribute("plans", planService.findActive());
+        model.addAttribute("isAgent", actor.getRole() != Role.POLICYHOLDER);
+    }
+
+    private User findApplicant(String nic) {
+        try {
+            return userService.findByNic(nic);
+        } catch (ResponseStatusException ex) {
+            throw new IllegalStateException("No registered member has the NIC " + nic);
+        }
     }
 }
