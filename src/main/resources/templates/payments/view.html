@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head(title='Payment Receipt')}"></head>
 <body>
 <div th:replace="~{fragments/layout :: navbar}"></div>
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
-    <main class="content" style="max-width:600px;">
+    <main class="content" style="max-width:640px;">
         <h3 class="mb-3">Payment Receipt</h3>
+        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
         <div class="card p-4 mb-3">
             <dl class="row mb-0">
                 <dt class="col-sm-4">Policy</dt><dd class="col-sm-8" th:text="${payment.policy.policyCode}"></dd>
@@ -16,10 +18,29 @@
                 <dt class="col-sm-4">Billing Period</dt><dd class="col-sm-8" th:text="${payment.billingPeriodStart} + ' to ' + ${payment.billingPeriodEnd}"></dd>
                 <dt class="col-sm-4">Status</dt><dd class="col-sm-8" th:text="${payment.status}"></dd>
                 <dt class="col-sm-4">Paid At</dt><dd class="col-sm-8" th:text="${payment.paidAt}"></dd>
+                <dt class="col-sm-4" th:if="${payment.voidReason}">Void Reason</dt>
+                <dd class="col-sm-8" th:if="${payment.voidReason}" th:text="${payment.voidReason}"></dd>
             </dl>
         </div>
 
-        <div class="card p-3 mb-3" th:if="${payment.status.name() == 'PAID'}">
+        <!-- ---------------- Refund request status ---------------- -->
+        <div class="alert alert-warning" th:if="${payment.refundPending}">
+            <i class="bi bi-hourglass-split"></i>
+            Refund requested on <strong th:text="${#temporals.format(payment.refundRequestedAt, 'MMM d, yyyy HH:mm')}">date</strong>
+            and waiting for approval by an admin or claims officer.
+            <div class="mt-1" style="font-size:0.85rem;">Reason: <span th:text="${payment.refundReason}">reason</span></div>
+        </div>
+        <div class="alert" th:if="${payment.refundDecidedAt}"
+             th:classappend="${payment.status.name() == 'REFUNDED'} ? 'alert-success' : 'alert-secondary'">
+            Refund <strong th:text="${payment.status.name() == 'REFUNDED'} ? 'approved' : 'rejected'">decided</strong>
+            by <span th:text="${payment.refundDecidedBy?.fullName}">staff</span>
+            on <span th:text="${#temporals.format(payment.refundDecidedAt, 'MMM d, yyyy')}">date</span>.
+            <span th:if="${payment.refundDecisionNotes}">Notes: <span th:text="${payment.refundDecisionNotes}"></span></span>
+            <div class="mt-1" style="font-size:0.85rem;">Requested because: <span th:text="${payment.refundReason}">reason</span></div>
+        </div>
+
+        <!-- ---------------- Policyholder: method, auto-pay and refund request ---------------- -->
+        <div class="card p-3 mb-3" th:if="${payment.status.name() == 'PAID'}" sec:authorize="hasAnyRole('POLICYHOLDER','ADMIN')">
             <h6>Change Method / Auto-Pay</h6>
             <form th:action="@{'/payments/' + ${payment.id} + '/method'}" method="post" class="row g-2">
                 <div class="col-md-6">
@@ -35,12 +56,45 @@
             </form>
         </div>
 
-        <div th:if="${payment.status.name() == 'PAID'}">
-            <form th:action="@{'/payments/' + ${payment.id} + '/cancel'}" method="post" class="d-inline">
-                <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Cancel this payment?');">Cancel</button>
+        <div class="card p-3 mb-3" sec:authorize="hasRole('POLICYHOLDER')"
+             th:if="${payment.status.name() == 'PAID' and !payment.refundPending}">
+            <h6><i class="bi bi-arrow-counterclockwise"></i> Request a Refund</h6>
+            <p class="text-muted-soft mb-2" style="font-size:0.82rem;">
+                An admin or claims officer reviews every refund request. The payment stays active until the
+                request is approved.
+            </p>
+            <form th:action="@{'/payments/' + ${payment.id} + '/refund-request'}" method="post">
+                <textarea name="reason" class="form-control mb-2" rows="2" maxlength="500" required
+                          placeholder="Why do you need a refund? For example: I was charged twice."></textarea>
+                <button type="submit" class="btn btn-outline-warning">Submit Refund Request</button>
             </form>
-            <form th:action="@{'/payments/' + ${payment.id} + '/refund'}" method="post" class="d-inline">
-                <button type="submit" class="btn btn-outline-warning" onclick="return confirm('Refund this payment?');">Refund</button>
+        </div>
+
+        <!-- ---------------- Staff: decide a refund, or void a payment recorded in error ---------------- -->
+        <div class="card p-3 mb-3" sec:authorize="hasAnyRole('ADMIN','CLAIMS_OFFICER')" th:if="${payment.refundPending}">
+            <h6><i class="bi bi-clipboard2-check"></i> Decide Refund Request</h6>
+            <form th:action="@{'/payments/' + ${payment.id} + '/refund-decision'}" method="post" class="row g-2">
+                <div class="col-md-8">
+                    <input type="text" name="notes" class="form-control" maxlength="500" placeholder="Notes (required when rejecting)"/>
+                </div>
+                <div class="col-md-2"><button type="submit" name="approve" value="true" class="btn btn-success w-100">Approve</button></div>
+                <div class="col-md-2"><button type="submit" name="approve" value="false" class="btn btn-outline-danger w-100">Reject</button></div>
+            </form>
+        </div>
+
+        <div class="card p-3 mb-3" sec:authorize="hasAnyRole('ADMIN','CLAIMS_OFFICER')"
+             th:if="${payment.status.name() == 'PAID' and !payment.refundPending}">
+            <h6><i class="bi bi-slash-circle"></i> Void Payment</h6>
+            <p class="text-muted-soft mb-2" style="font-size:0.82rem;">
+                Use only for a payment recorded in error, such as a duplicate entry.
+            </p>
+            <form th:action="@{'/payments/' + ${payment.id} + '/void'}" method="post" class="row g-2">
+                <div class="col-md-9">
+                    <input type="text" name="reason" class="form-control" maxlength="500" required placeholder="Reason for voiding"/>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-outline-danger w-100" onclick="return confirm('Void this payment?');">Void</button>
+                </div>
             </form>
         </div>
     </main>

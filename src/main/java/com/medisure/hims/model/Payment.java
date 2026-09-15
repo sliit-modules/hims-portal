@@ -51,4 +51,28 @@ public class Payment {
 
     @NotNull
     private LocalDateTime paidAt = LocalDateTime.now();
+
+    /** Set when the policyholder asks for their money back; an admin or claims officer decides. */
+    private LocalDateTime refundRequestedAt;
+
+    @Column(length = 500)
+    private String refundReason;
+
+    @ManyToOne
+    @JoinColumn(name = "refund_decided_by_id")
+    private User refundDecidedBy;
+
+    private LocalDateTime refundDecidedAt;
+
+    @Column(length = 500)
+    private String refundDecisionNotes;
+
+    /** Why staff voided this payment (e.g. a duplicate entry), when its status is CANCELLED. */
+    @Column(length = 500)
+    private String voidReason;
+
+    /** A refund request that is still waiting for an admin or claims officer. */
+    public boolean isRefundPending() {
+        return refundRequestedAt != null && refundDecidedAt == null;
+    }
 }

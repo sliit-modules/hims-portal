@@ -9,4 +9,7 @@ import java.util.List;
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByPolicy(Policy policy);
     List<Payment> findByPolicyPolicyholder(com.medisure.hims.model.User policyholder);
+
+    /** Refund requests still waiting for an admin or claims officer. */
+    List<Payment> findByRefundRequestedAtIsNotNullAndRefundDecidedAtIsNull();
 }

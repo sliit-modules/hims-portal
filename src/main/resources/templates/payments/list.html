@@ -8,8 +8,20 @@
     <main class="content">
         <div class="page-header">
             <h3>Payments</h3>
-            <div class="subtitle">Premium payments across policies</div>
+            <div class="subtitle" th:text="${pendingRefundFilter} ? 'Refund requests waiting for approval' : 'Premium payments across policies'">Premium payments across policies</div>
         </div>
+
+        <div class="alert alert-warning d-flex justify-content-between align-items-center"
+             th:if="${pendingRefundCount > 0 and !pendingRefundFilter}">
+            <span><i class="bi bi-hourglass-split"></i>
+                <strong th:text="${pendingRefundCount}">0</strong> refund request(s) waiting for approval</span>
+            <a href="/payments?refunds=pending" class="btn btn-sm btn-warning">Review requests</a>
+        </div>
+        <div class="alert alert-info d-flex justify-content-between align-items-center" th:if="${pendingRefundFilter}">
+            <span><i class="bi bi-funnel"></i> Showing only refund requests waiting for approval</span>
+            <a href="/payments" class="btn btn-sm btn-outline-secondary">Show all payments</a>
+        </div>
+
         <div class="table-card">
             <table class="table table-hover">
                 <thead><tr><th>Policy</th><th>Amount</th><th>Method</th><th>Billing Period</th><th>Status</th><th></th></tr></thead>
@@ -19,12 +31,16 @@
                     <td th:text="'LKR ' + ${p.amount}">0.00</td>
                     <td th:text="${p.method}">CARD</td>
                     <td th:text="${p.billingPeriodStart} + ' - ' + ${p.billingPeriodEnd}">-</td>
-                    <td><span class="pill" th:classappend="${p.status.name() == 'PAID'} ? 'pill-success' : (${p.status.name() == 'REFUNDED'} ? 'pill-info' : 'pill-neutral')" th:text="${p.status}">PAID</span></td>
+                    <td>
+                        <span class="pill" th:classappend="${p.status.name() == 'PAID'} ? 'pill-success' : (${p.status.name() == 'REFUNDED'} ? 'pill-info' : 'pill-neutral')" th:text="${p.status}">PAID</span>
+                        <span class="pill pill-warning ms-1" th:if="${p.refundPending}">Refund requested</span>
+                    </td>
                     <td><a th:href="@{'/payments/' + ${p.id}}" class="btn btn-sm btn-outline-primary">View</a></td>
                 </tr>
                 </tbody>
             </table>
-            <div th:if="${#lists.isEmpty(payments)}" class="empty-state"><i class="bi bi-credit-card"></i>No payments yet.</div>
+            <div th:if="${#lists.isEmpty(payments)}" class="empty-state"><i class="bi bi-credit-card"></i>
+                <span th:text="${pendingRefundFilter} ? 'No refund requests are waiting.' : 'No payments yet.'">No payments yet.</span></div>
         </div>
     </main>
 </div>
