@@ -7,6 +7,7 @@
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
     <main class="content" style="max-width:600px;">
         <h3 class="mb-3">Underwriting Application</h3>
+        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
         <form th:action="@{/underwriting}" method="post" class="card p-4">
             <div class="mb-2" th:if="${isAgent}">
                 <label class="form-label">Applicant NIC (leave blank to apply for yourself)</label>

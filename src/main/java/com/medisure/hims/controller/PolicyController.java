@@ -38,7 +38,7 @@ public class PolicyController {
 
     @GetMapping("/issue/{applicationId}")
     public String issueForm(@PathVariable Long applicationId, Model model) {
-        model.addAttribute("application", underwritingService.findById(applicationId));
+        model.addAttribute("underwritingApp", underwritingService.findById(applicationId));
         model.addAttribute("frequencies", PremiumFrequency.values());
         return "policies/issue";
     }
@@ -51,7 +51,7 @@ public class PolicyController {
             Policy policy = policyService.issueFromApplication(app, premiumFrequency, principal.getUser());
             return "redirect:/policies/" + policy.getId();
         } catch (IllegalStateException ex) {
-            model.addAttribute("application", app);
+            model.addAttribute("underwritingApp", app);
             model.addAttribute("frequencies", PremiumFrequency.values());
             model.addAttribute("errorMessage", ex.getMessage());
             return "policies/issue";
