@@ -5,6 +5,7 @@ import com.medisure.hims.model.User;
 import com.medisure.hims.service.UserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 @Controller
@@ -15,6 +16,13 @@ public class UserAdminController {
 
     public UserAdminController(UserService userService) {
         this.userService = userService;
+    }
+
+    /** The role arrives as its own parameter; the id and other server-owned fields never come from the form. */
+    @InitBinder("user")
+    void protectServerOwnedFields(WebDataBinder binder) {
+        binder.setDisallowedFields("id", "role", "passwordHash", "enabled",
+                "privacyConsentAt", "privacyNoticeVersion");
     }
 
     @GetMapping

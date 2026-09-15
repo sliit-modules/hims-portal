@@ -149,6 +149,16 @@
                     <input type="text" name="currentMedications" class="form-control" placeholder="None"/>
                 </div>
                 <div class="col-12">
+                    <div class="form-check">
+                        <input type="checkbox" name="consentConfirmed" value="true" class="form-check-input" id="dependentConsent"/>
+                        <label class="form-check-label" for="dependentConsent">
+                            <strong>Required for dependents aged 18 or over:</strong> this person has agreed to their
+                            personal and medical details being recorded, as described in the
+                            <a href="/privacy" target="_blank">Privacy Notice</a>. For a child, the policyholder consents as parent or guardian.
+                        </label>
+                    </div>
+                </div>
+                <div class="col-12">
                     <button type="submit" class="btn btn-primary"><i class="bi bi-person-plus"></i>Add Dependent</button>
                 </div>
             </form>
