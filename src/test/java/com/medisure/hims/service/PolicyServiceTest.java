@@ -223,6 +223,23 @@ class PolicyServiceTest {
     }
 
     @Test
+    @DisplayName("Adding a dependent always creates a new record, even if the request carries an id")
+    void addDependentIgnoresSubmittedId() {
+        Dependent child = new Dependent();
+        child.setId(5L);
+        child.setFullName("Dinuk Perera");
+        child.setDateOfBirth(LocalDate.now().minusYears(9));
+        child.setRelationship(RelationshipType.CHILD);
+
+        when(policyRepository.findById(1L)).thenReturn(Optional.of(testPolicy));
+        when(dependentRepository.save(any(Dependent.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Dependent saved = policyService.addDependent(1L, child, testAgent);
+
+        assertNull(saved.getId(), "a submitted id must never overwrite another covered member");
+    }
+
+    @Test
     @DisplayName("Dependents cannot be added to an individual plan")
     void refusesDependentOnIndividualPlan() {
         familyPlan.setPlanType(PlanType.INDIVIDUAL);

@@ -9,6 +9,7 @@ import com.medisure.hims.service.UnderwritingService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -28,6 +29,16 @@ public class PolicyController {
         this.underwritingService = underwritingService;
         this.claimService = claimService;
         this.paymentService = paymentService;
+    }
+
+    /**
+     * Add Dependent binds the form onto a Dependent at /policies/{id}/dependents. Without this,
+     * Spring also binds the URL's {id} (the policy id) onto Dependent.id, so saving would
+     * overwrite whichever existing dependent happens to share that number.
+     */
+    @InitBinder("dependent")
+    void protectDependentFields(WebDataBinder binder) {
+        binder.setDisallowedFields("id", "policy", "consentConfirmedAt");
     }
 
     @GetMapping

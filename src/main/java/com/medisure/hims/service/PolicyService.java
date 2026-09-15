@@ -122,6 +122,7 @@ public class PolicyService {
             }
             dependent.setConsentConfirmedAt(LocalDateTime.now());
         }
+        dependent.setId(null);   // always a new covered member, never an overwrite of an existing one
         dependent.setPolicy(policy);
         Dependent saved = dependentRepository.save(dependent);
         auditService.log("Dependent", saved.getId(), "ADDED", actor, "policy " + policy.getPolicyCode());
