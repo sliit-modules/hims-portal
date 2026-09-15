@@ -42,19 +42,24 @@ public class AuthController {
     @PostMapping("/register")
     public String register(@Valid @ModelAttribute("user") User user, BindingResult bindingResult,
                             @RequestParam String password, @RequestParam String confirmPassword,
+                            @RequestParam(defaultValue = "false") boolean acceptPrivacy,
                             Model model) {
         model.addAttribute("mode", "signup");
+        model.addAttribute("acceptPrivacy", acceptPrivacy);
 
         if (password == null || password.length() < 6) {
             bindingResult.reject("password.tooShort", "Password must be at least 6 characters");
         } else if (!password.equals(confirmPassword)) {
             bindingResult.reject("password.mismatch", "Passwords do not match");
         }
+        if (!acceptPrivacy) {
+            bindingResult.reject("privacy.required", "Please read and accept the Privacy Notice to create an account");
+        }
         if (bindingResult.hasErrors()) {
             return "auth/auth";
         }
         try {
-            userService.registerPolicyholder(user, password);
+            userService.registerPolicyholder(user, password, acceptPrivacy);
         } catch (IllegalArgumentException ex) {
             model.addAttribute("errorMessage", ex.getMessage());
             return "auth/auth";

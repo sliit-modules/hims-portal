@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
@@ -101,6 +102,20 @@ public class User {
     private String emergencyContactPhone;
 
     private String emergencyContactRelation;
+
+    // ---------------- Privacy consent (PDPA No. 9 of 2022) ----------------
+
+    /** When the member accepted the privacy notice; null until they do. */
+    private LocalDateTime privacyConsentAt;
+
+    /** Which version of the notice was accepted, so a revised notice can be put to members again. */
+    @Column(length = 20)
+    private String privacyNoticeVersion;
+
+    /** True once the member has accepted the privacy notice currently in force. */
+    public boolean hasCurrentPrivacyConsent() {
+        return privacyConsentAt != null && PrivacyNotice.VERSION.equals(privacyNoticeVersion);
+    }
 
     /** First letters of the first two words of the full name, for avatar circles. */
     public String getInitials() {

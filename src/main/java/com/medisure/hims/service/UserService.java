@@ -1,5 +1,6 @@
 package com.medisure.hims.service;
 
+import com.medisure.hims.model.PrivacyNotice;
 import com.medisure.hims.model.Role;
 import com.medisure.hims.model.User;
 import com.medisure.hims.repository.UserRepository;
@@ -7,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -24,7 +26,10 @@ public class UserService {
         this.auditService = auditService;
     }
 
-    public User registerPolicyholder(User user, String rawPassword) {
+    public User registerPolicyholder(User user, String rawPassword, boolean acceptedPrivacyNotice) {
+        if (!acceptedPrivacyNotice) {
+            throw new IllegalArgumentException("Please read and accept the Privacy Notice to create an account");
+        }
         if (userRepository.existsByNic(user.getNic())) {
             throw new IllegalArgumentException("An account with this NIC already exists");
         }
@@ -33,8 +38,22 @@ public class UserService {
         }
         user.setRole(Role.POLICYHOLDER);
         user.setPasswordHash(passwordEncoder.encode(rawPassword));
+        user.setPrivacyConsentAt(LocalDateTime.now());
+        user.setPrivacyNoticeVersion(PrivacyNotice.VERSION);
         User saved = userRepository.save(user);
-        auditService.log("User", saved.getId(), "REGISTERED", saved, "Self-registered as policyholder");
+        auditService.log("User", saved.getId(), "REGISTERED", saved,
+                "Self-registered as policyholder; accepted privacy notice " + PrivacyNotice.VERSION);
+        return saved;
+    }
+
+    /** Records that an existing member accepted the current privacy notice. */
+    public User recordPrivacyConsent(Long userId, User actor) {
+        User user = findById(userId);
+        user.setPrivacyConsentAt(LocalDateTime.now());
+        user.setPrivacyNoticeVersion(PrivacyNotice.VERSION);
+        User saved = userRepository.save(user);
+        auditService.log("User", saved.getId(), "PRIVACY_CONSENT", actor,
+                "Accepted privacy notice " + PrivacyNotice.VERSION);
         return saved;
     }
 
