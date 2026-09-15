@@ -86,4 +86,35 @@ class UserServiceTest {
         assertTrue(updated.hasCurrentPrivacyConsent());
         verify(auditService).log(eq("User"), eq(5L), eq("PRIVACY_CONSENT"), eq(member), any());
     }
+
+    @Test
+    @DisplayName("Registration always creates a new account, even if the form sends an id")
+    void registrationIgnoresSubmittedId() {
+        User member = newMember();
+        member.setId(12L);
+        when(userRepository.existsByNic("200012345678")).thenReturn(false);
+        when(userRepository.existsByEmail("tharushi@example.com")).thenReturn(false);
+        when(passwordEncoder.encode("secret1")).thenReturn("hashed");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        User registered = userService.registerPolicyholder(member, "secret1", true);
+
+        assertNull(registered.getId(), "a submitted id must never point the save at an existing account");
+    }
+
+    @Test
+    @DisplayName("Creating a staff account always creates a new account, even if the form sends an id")
+    void staffCreationIgnoresSubmittedId() {
+        User staff = newMember();
+        staff.setId(1L);
+        when(userRepository.existsByNic("200012345678")).thenReturn(false);
+        when(userRepository.existsByEmail("tharushi@example.com")).thenReturn(false);
+        when(passwordEncoder.encode("secret1")).thenReturn("hashed");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        User created = userService.createStaffUser(staff, "secret1", Role.CLAIMS_OFFICER);
+
+        assertNull(created.getId(), "a submitted id must never overwrite an existing account");
+        assertEquals(Role.CLAIMS_OFFICER, created.getRole());
+    }
 }

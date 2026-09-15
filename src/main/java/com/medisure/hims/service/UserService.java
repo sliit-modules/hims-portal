@@ -36,6 +36,7 @@ public class UserService {
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("An account with this email already exists");
         }
+        user.setId(null);   // always a new account: a stray id must never point the save at an existing one
         user.setRole(Role.POLICYHOLDER);
         user.setPasswordHash(passwordEncoder.encode(rawPassword));
         user.setPrivacyConsentAt(LocalDateTime.now());
@@ -64,6 +65,7 @@ public class UserService {
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("An account with this email already exists");
         }
+        user.setId(null);   // always a new account, never an overwrite
         user.setRole(role);
         user.setPasswordHash(passwordEncoder.encode(rawPassword));
         User saved = userRepository.save(user);

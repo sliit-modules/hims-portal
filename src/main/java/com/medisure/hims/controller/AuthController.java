@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -19,6 +20,17 @@ public class AuthController {
 
     public AuthController(UserService userService) {
         this.userService = userService;
+    }
+
+    /**
+     * The sign-up form binds straight onto a User, so fields the server owns must never come from
+     * the request — a submitted "id" would otherwise turn registration into an overwrite of an
+     * existing account (including the administrator's).
+     */
+    @InitBinder("user")
+    void protectServerOwnedFields(WebDataBinder binder) {
+        binder.setDisallowedFields("id", "role", "passwordHash", "enabled",
+                "privacyConsentAt", "privacyNoticeVersion");
     }
 
     @GetMapping("/login")
