@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -111,6 +112,17 @@ public class PolicyService {
                     "%s is %d years old — a NIC is required for covered members aged 18 and over"
                             .formatted(dependent.getFullName(), dependent.getAge()));
         }
+        // An adult's details are theirs to share: they must agree themselves. For a minor, the
+        // policyholder's own consent covers them as parent or guardian.
+        if (dependent.isNicRequired()) {
+            if (!dependent.isConsentConfirmed()) {
+                throw new IllegalStateException(
+                        "%s is %d, so please confirm they have consented to their personal and medical details being recorded"
+                                .formatted(dependent.getFullName(), dependent.getAge()));
+            }
+            dependent.setConsentConfirmedAt(LocalDateTime.now());
+        }
+        dependent.setId(null);   // always a new covered member, never an overwrite of an existing one
         dependent.setPolicy(policy);
         Dependent saved = dependentRepository.save(dependent);
         auditService.log("Dependent", saved.getId(), "ADDED", actor, "policy " + policy.getPolicyCode());

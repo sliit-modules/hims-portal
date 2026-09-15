@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Period;
 
 @Entity
@@ -65,6 +66,18 @@ public class Dependent {
 
     @Column(length = 500)
     private String currentMedications;
+
+    // ---------------- Privacy consent ----------------
+
+    /**
+     * When an adult dependent's own consent was confirmed. Minors have none: the policyholder
+     * consents for them as parent or guardian.
+     */
+    private LocalDateTime consentConfirmedAt;
+
+    /** Form-only tick box: the agent confirms the adult dependent agreed. Not stored as a column. */
+    @Transient
+    private boolean consentConfirmed;
 
     public int getAge() {
         return dateOfBirth == null ? 0 : Period.between(dateOfBirth, LocalDate.now()).getYears();

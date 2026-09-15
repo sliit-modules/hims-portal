@@ -170,6 +170,42 @@ class PolicyServiceTest {
     }
 
     @Test
+    @DisplayName("An adult dependent is only added once their own consent is confirmed")
+    void refusesAdultDependentWithoutConsent() {
+        Dependent adult = new Dependent();
+        adult.setFullName("Nadeesha Perera");
+        adult.setNic("199201234567");
+        adult.setDateOfBirth(LocalDate.now().minusYears(34));
+        adult.setRelationship(RelationshipType.SPOUSE);
+
+        when(policyRepository.findById(1L)).thenReturn(Optional.of(testPolicy));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> policyService.addDependent(1L, adult, testAgent));
+
+        assertTrue(ex.getMessage().contains("consent"));
+        verify(dependentRepository, never()).save(any(Dependent.class));
+    }
+
+    @Test
+    @DisplayName("Confirming an adult dependent's consent records when it was given")
+    void recordsConsentForAdultDependent() {
+        Dependent adult = new Dependent();
+        adult.setFullName("Nadeesha Perera");
+        adult.setNic("199201234567");
+        adult.setDateOfBirth(LocalDate.now().minusYears(34));
+        adult.setRelationship(RelationshipType.SPOUSE);
+        adult.setConsentConfirmed(true);
+
+        when(policyRepository.findById(1L)).thenReturn(Optional.of(testPolicy));
+        when(dependentRepository.save(any(Dependent.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Dependent saved = policyService.addDependent(1L, adult, testAgent);
+
+        assertNotNull(saved.getConsentConfirmedAt());
+    }
+
+    @Test
     @DisplayName("A minor may be covered without a NIC")
     void acceptsMinorDependentWithoutNic() {
         Dependent child = new Dependent();
@@ -184,6 +220,23 @@ class PolicyServiceTest {
 
         assertEquals(testPolicy, saved.getPolicy());
         assertFalse(saved.isNicRequired());
+    }
+
+    @Test
+    @DisplayName("Adding a dependent always creates a new record, even if the request carries an id")
+    void addDependentIgnoresSubmittedId() {
+        Dependent child = new Dependent();
+        child.setId(5L);
+        child.setFullName("Dinuk Perera");
+        child.setDateOfBirth(LocalDate.now().minusYears(9));
+        child.setRelationship(RelationshipType.CHILD);
+
+        when(policyRepository.findById(1L)).thenReturn(Optional.of(testPolicy));
+        when(dependentRepository.save(any(Dependent.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Dependent saved = policyService.addDependent(1L, child, testAgent);
+
+        assertNull(saved.getId(), "a submitted id must never overwrite another covered member");
     }
 
     @Test

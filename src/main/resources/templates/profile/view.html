@@ -115,6 +115,13 @@
                             <span class="pill" th:classappend="${member.enabled} ? 'pill-success' : 'pill-danger'"
                                   th:text="${member.enabled} ? 'Active' : 'Disabled'">Active</span>
                         </dd>
+                        <dt class="col-sm-5" th:if="${member.role.name() == 'POLICYHOLDER'}">Privacy Notice</dt>
+                        <dd class="col-sm-7" th:if="${member.role.name() == 'POLICYHOLDER'}">
+                            <span th:if="${member.privacyConsentAt}"
+                                  th:text="'Accepted ' + ${#temporals.format(member.privacyConsentAt, 'MMM d, yyyy')} + ' (version ' + ${member.privacyNoticeVersion} + ')'">Accepted</span>
+                            <span th:unless="${member.privacyConsentAt}" class="text-muted">Not yet accepted</span>
+                            · <a href="/privacy">Read notice</a>
+                        </dd>
                     </dl>
                 </div>
             </div>
