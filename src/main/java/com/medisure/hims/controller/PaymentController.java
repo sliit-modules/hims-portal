@@ -10,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Controller
@@ -64,6 +65,18 @@ public class PaymentController {
         model.addAttribute("payment", payment);
         model.addAttribute("methods", PaymentMethod.values());
         return "payments/view";
+    }
+
+    /** A printable receipt; the browser's print dialog can save it as a PDF. */
+    @GetMapping("/{id}/receipt")
+    public String receipt(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal, Model model) {
+        Payment payment = paymentService.findById(id);
+        paymentService.assertOwner(payment, principal.getUser());
+        model.addAttribute("payment", payment);
+        model.addAttribute("receiptNo",
+                "RCPT-" + payment.getPaidAt().getYear() + "-" + String.format("%06d", payment.getId()));
+        model.addAttribute("printedOn", LocalDate.now());
+        return "payments/receipt";
     }
 
     @PostMapping("/{id}/method")
