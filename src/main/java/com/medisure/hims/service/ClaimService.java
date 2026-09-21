@@ -21,11 +21,14 @@ public class ClaimService {
     private final ClaimRepository claimRepository;
     private final CodeGenerator codeGenerator;
     private final AuditService auditService;
+    private final NotificationService notificationService;
 
-    public ClaimService(ClaimRepository claimRepository, CodeGenerator codeGenerator, AuditService auditService) {
+    public ClaimService(ClaimRepository claimRepository, CodeGenerator codeGenerator, AuditService auditService,
+                        NotificationService notificationService) {
         this.claimRepository = claimRepository;
         this.codeGenerator = codeGenerator;
         this.auditService = auditService;
+        this.notificationService = notificationService;
     }
 
     public List<Claim> findAllFor(User currentUser) {
@@ -137,6 +140,9 @@ public class ClaimService {
         claim.setSubmittedAt(LocalDateTime.now());
         Claim saved = claimRepository.save(claim);
         auditService.log("Claim", saved.getId(), "SUBMITTED", actor, saved.getClaimCode());
+        notificationService.notifyRole(Role.CLAIMS_OFFICER, "New claim to review: " + saved.getClaimCode(),
+                saved.getCategory() + " claim for LKR " + saved.getAmountClaimed() + " at " + saved.getHospitalName(),
+                "/claims/" + saved.getId());
         return saved;
     }
 
@@ -162,6 +168,10 @@ public class ClaimService {
         claim.setDecisionNotes(notes);
         Claim saved = claimRepository.save(claim);
         auditService.log("Claim", saved.getId(), "DECIDED:" + status, actor, notes);
+        notificationService.notify(saved.getClaimant(),
+                "Claim " + saved.getClaimCode() + (status == ClaimStatus.APPROVED ? " approved" : " rejected"),
+                notes == null || notes.isBlank() ? "Open the claim for details." : notes,
+                "/claims/" + saved.getId());
         return saved;
     }
 

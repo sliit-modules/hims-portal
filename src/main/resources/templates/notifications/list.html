@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title='Notifications')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+    <main class="content" style="max-width:780px;">
+        <div class="page-header d-flex justify-content-between align-items-end">
+            <div>
+                <h3>Notifications</h3>
+                <div class="subtitle">Updates about your claims, policies, payments and support tickets</div>
+            </div>
+            <form th:if="${unreadNotifications > 0}" th:action="@{/notifications/read-all}" method="post" class="m-0">
+                <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-check2-all"></i> Mark all as read</button>
+            </form>
+        </div>
+
+        <div class="section-card">
+            <div th:if="${#lists.isEmpty(notifications)}" class="empty-state">
+                <i class="bi bi-bell-slash"></i>You have no notifications yet.
+            </div>
+            <a th:each="n : ${notifications}" th:href="@{'/notifications/' + ${n.id} + '/open'}"
+               class="list-row text-decoration-none" style="color:inherit;">
+                <div class="avatar avatar-sm" th:classappend="${n.unread} ? 'avatar-c1' : 'avatar-c0'">
+                    <i class="bi" th:classappend="${n.unread} ? 'bi-bell-fill' : 'bi-bell'"></i>
+                </div>
+                <div class="grow">
+                    <div class="primary" th:classappend="${n.unread} ? 'fw-bold' : ''" th:text="${n.title}">Title</div>
+                    <div class="secondary" th:text="${n.message}">Message</div>
+                </div>
+                <div class="text-muted-soft text-nowrap" style="font-size:0.78rem;">
+                    <span th:text="${#temporals.format(n.createdAt, 'MMM d, HH:mm')}">date</span>
+                    <span th:if="${n.unread}" class="pill pill-info ms-1">New</span>
+                </div>
+            </a>
+        </div>
+    </main>
+</div>
+</body>
+</html>

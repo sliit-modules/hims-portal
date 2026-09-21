@@ -33,6 +33,9 @@ class PaymentServiceTest {
     @Mock
     private AuditService auditService;
 
+    @Mock
+    private NotificationService notificationService;
+
     @InjectMocks
     private PaymentService paymentService;
 

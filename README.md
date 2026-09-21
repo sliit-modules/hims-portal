@@ -199,7 +199,7 @@ Staff sign in with their **work email**; members sign in with their **NIC**.
 
 ## 🧪 Running the Tests
 
-The service layer is covered by Mockito unit tests — 85 tests across all six modules, sign-in security and audit logging:
+The service layer is covered by Mockito unit tests — 92 tests across all six modules, sign-in security, audit logging and notifications:
 
 ```bash
 mvn test

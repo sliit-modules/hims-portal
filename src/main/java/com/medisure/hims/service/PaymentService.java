@@ -20,12 +20,14 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final PolicyRepository policyRepository;
     private final AuditService auditService;
+    private final NotificationService notificationService;
 
     public PaymentService(PaymentRepository paymentRepository, PolicyRepository policyRepository,
-                           AuditService auditService) {
+                           AuditService auditService, NotificationService notificationService) {
         this.paymentRepository = paymentRepository;
         this.policyRepository = policyRepository;
         this.auditService = auditService;
+        this.notificationService = notificationService;
     }
 
     public List<Payment> findAllFor(User currentUser) {
@@ -112,6 +114,10 @@ public class PaymentService {
         payment.setRefundDecisionNotes(null);
         Payment saved = paymentRepository.save(payment);
         auditService.log("Payment", saved.getId(), "REFUND_REQUESTED", actor, saved.getRefundReason());
+        String title = "Refund request on " + saved.getPolicy().getPolicyCode();
+        String message = "LKR " + saved.getAmount() + ": " + saved.getRefundReason();
+        notificationService.notifyRole(Role.CLAIMS_OFFICER, title, message, "/payments/" + saved.getId());
+        notificationService.notifyRole(Role.ADMIN, title, message, "/payments/" + saved.getId());
         return saved;
     }
 
@@ -134,6 +140,11 @@ public class PaymentService {
         Payment saved = paymentRepository.save(payment);
         auditService.log("Payment", saved.getId(), approve ? "REFUND_APPROVED" : "REFUND_REJECTED", actor,
                 saved.getRefundDecisionNotes());
+        notificationService.notify(saved.getPolicy().getPolicyholder(),
+                "Refund " + (approve ? "approved" : "not approved") + " for " + saved.getPolicy().getPolicyCode(),
+                saved.getRefundDecisionNotes() != null ? saved.getRefundDecisionNotes()
+                        : "LKR " + saved.getAmount() + " will be returned to you.",
+                "/payments/" + saved.getId());
         return saved;
     }
 

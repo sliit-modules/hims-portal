@@ -27,12 +27,15 @@ public class UnderwritingService {
     private final UnderwritingApplicationRepository applicationRepository;
     private final CodeGenerator codeGenerator;
     private final AuditService auditService;
+    private final NotificationService notificationService;
 
     public UnderwritingService(UnderwritingApplicationRepository applicationRepository,
-                                CodeGenerator codeGenerator, AuditService auditService) {
+                                CodeGenerator codeGenerator, AuditService auditService,
+                                NotificationService notificationService) {
         this.applicationRepository = applicationRepository;
         this.codeGenerator = codeGenerator;
         this.auditService = auditService;
+        this.notificationService = notificationService;
     }
 
     public List<UnderwritingApplication> findAllFor(User currentUser) {
@@ -151,6 +154,13 @@ public class UnderwritingService {
         auditService.log("UnderwritingApplication", saved.getId(), "DECIDED:" + decision, actor,
                 "risk=" + riskScore + " (suggested " + suggested + ") loading=" + premiumLoadingPercent
                         + (reason != null ? "; reason: " + reason : ""));
+        notificationService.notify(saved.getApplicant(),
+                "Application " + saved.getApplicationCode()
+                        + (decision == ApplicationDecision.APPROVED ? " approved" : " not approved"),
+                decision == ApplicationDecision.APPROVED
+                        ? "A sales agent will now issue your policy."
+                        : "Open the application for details, or raise a support ticket with any questions.",
+                "/underwriting/" + saved.getId());
         return saved;
     }
 
