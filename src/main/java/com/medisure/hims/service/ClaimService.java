@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Period;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -46,15 +47,48 @@ public class ClaimService {
         }
     }
 
-    /** Amount already approved against this policy's annual coverage limit. */
+    /** Amount already approved against the coverage limit in the current policy year. */
     public BigDecimal approvedTotal(Policy policy) {
+        return approvedTotal(policy, LocalDate.now());
+    }
+
+    /**
+     * Amount approved in the policy year that contains the given date. The coverage limit is
+     * annual, so claims treated in an earlier policy year no longer count against it.
+     */
+    public BigDecimal approvedTotal(Policy policy, LocalDate onDate) {
+        LocalDate[] year = policyYear(policy, onDate);
         return claimRepository.findByPolicyAndStatus(policy, ClaimStatus.APPROVED).stream()
+                .filter(c -> year == null || c.getTreatmentDate() == null
+                        || (!c.getTreatmentDate().isBefore(year[0]) && c.getTreatmentDate().isBefore(year[1])))
                 .map(Claim::getAmountClaimed)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    /** Cover left in the current policy year. */
     public BigDecimal remainingCoverage(Policy policy) {
-        return policy.getPlan().getCoverageLimit().subtract(approvedTotal(policy));
+        return remainingCoverage(policy, LocalDate.now());
+    }
+
+    /** Cover left in the policy year that contains the given (treatment) date. */
+    public BigDecimal remainingCoverage(Policy policy, LocalDate onDate) {
+        return policy.getPlan().getCoverageLimit().subtract(approvedTotal(policy, onDate));
+    }
+
+    /**
+     * The policy year containing the date, as [start, end): each year runs from the policy's start
+     * date to its next anniversary. Null when the policy has no start date, in which case every
+     * approved claim counts.
+     */
+    private LocalDate[] policyYear(Policy policy, LocalDate onDate) {
+        LocalDate start = policy.getStartDate();
+        if (start == null) {
+            return null;
+        }
+        LocalDate date = onDate == null ? LocalDate.now() : onDate;
+        int yearsIn = date.isBefore(start) ? 0 : Period.between(start, date).getYears();
+        LocalDate yearStart = start.plusYears(yearsIn);
+        return new LocalDate[]{yearStart, yearStart.plusYears(1)};
     }
 
     /** Percentage (0-100) of a policy's annual coverage already used by approved claims. */
@@ -80,7 +114,11 @@ public class ClaimService {
                     .formatted(policy.getPolicyCode(), policy.getStatus()));
         }
         validateDetails(hospitalName, treatmentDate, diagnosisSummary, amountClaimed);
-        BigDecimal remaining = remainingCoverage(policy);
+        if (policy.getStartDate() != null && treatmentDate.isBefore(policy.getStartDate())) {
+            throw new IllegalStateException("The treatment date is before this policy's cover started on "
+                    + policy.getStartDate());
+        }
+        BigDecimal remaining = remainingCoverage(policy, treatmentDate);
         if (amountClaimed.compareTo(remaining) > 0) {
             throw new IllegalStateException(
                     "Claim of %s exceeds the remaining coverage of %s on this policy".formatted(amountClaimed, remaining));
@@ -107,8 +145,14 @@ public class ClaimService {
             throw new AccessDeniedException("Only a claims officer can decide a claim");
         }
         Claim claim = findById(id);
+        if (claim.getStatus() != ClaimStatus.SUBMITTED) {
+            throw new IllegalStateException("This claim has already been decided (" + claim.getStatus() + ")");
+        }
+        if (status != ClaimStatus.APPROVED && status != ClaimStatus.REJECTED) {
+            throw new IllegalStateException("A claim can only be approved or rejected");
+        }
         if (status == ClaimStatus.APPROVED) {
-            BigDecimal remaining = remainingCoverage(claim.getPolicy());
+            BigDecimal remaining = remainingCoverage(claim.getPolicy(), claim.getTreatmentDate());
             if (claim.getAmountClaimed().compareTo(remaining) > 0) {
                 throw new IllegalStateException(
                         "Cannot approve: claim exceeds the remaining coverage of %s on this policy".formatted(remaining));
