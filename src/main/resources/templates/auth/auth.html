@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -18,19 +18,19 @@
 <body>
 
 <!-- Blurred colour blobs behind the frosted card -->
-<div class="bg-blobs">
+<div class="bg-blobs" aria-hidden="true">
     <span class="blob blob-1"></span>
     <span class="blob blob-2"></span>
     <span class="blob blob-3"></span>
 </div>
 
-<div class="auth-stage">
+<main class="auth-stage" id="main">
     <div class="auth-shell" th:classappend="${mode == 'signup'} ? 'panel-active' : ''" id="authShell">
 
         <!-- ============ SIGN UP (left half) ============ -->
         <div class="form-pane sign-up-pane">
             <form th:action="@{/register}" th:object="${user}" method="post" class="auth-form" novalidate>
-                <h2 class="form-title">Create Account</h2>
+                <h1 class="form-title">Create Account</h1>
                 <p class="form-sub">Join MediSure and manage your cover online</p>
 
                 <div class="inline-alert danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
@@ -41,23 +41,23 @@
                 <div class="field-grid">
                     <div class="field span-2">
                         <i class="bi bi-person-vcard"></i>
-                        <input type="text" th:field="*{nic}" maxlength="12" placeholder="NIC (12 digits) — your login" required/>
+                        <input aria-label="NIC (12 digits), used to sign in" type="text" th:field="*{nic}" maxlength="12" placeholder="NIC (12 digits) — your login" required/>
                     </div>
                     <div class="field-error span-2" th:if="${#fields.hasErrors('nic')}" th:errors="*{nic}"></div>
 
                     <div class="field span-2">
                         <i class="bi bi-person"></i>
-                        <input type="text" th:field="*{fullName}" placeholder="Full name" required/>
+                        <input aria-label="Full name" type="text" th:field="*{fullName}" placeholder="Full name" required/>
                     </div>
                     <div class="field-error span-2" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></div>
 
                     <div class="field">
                         <i class="bi bi-calendar-event"></i>
-                        <input type="date" th:field="*{dateOfBirth}" required/>
+                        <input aria-label="Date of birth" type="date" th:field="*{dateOfBirth}" required/>
                     </div>
                     <div class="field">
                         <i class="bi bi-gender-ambiguous"></i>
-                        <select th:field="*{gender}" required>
+                        <select aria-label="Gender" th:field="*{gender}" required>
                             <option value="">Gender</option>
                             <option th:each="g : ${T(com.medisure.hims.model.Gender).values()}" th:value="${g}" th:text="${g}"></option>
                         </select>
@@ -66,34 +66,34 @@
 
                     <div class="field">
                         <i class="bi bi-droplet-half"></i>
-                        <select th:field="*{bloodGroup}" required>
+                        <select aria-label="Blood group" th:field="*{bloodGroup}" required>
                             <option th:each="b : ${T(com.medisure.hims.model.BloodGroup).values()}"
                                     th:value="${b}" th:text="'Blood: ' + ${b.label}"></option>
                         </select>
                     </div>
                     <div class="field">
                         <i class="bi bi-telephone"></i>
-                        <input type="text" th:field="*{phoneNumber}" placeholder="Phone" required/>
+                        <input aria-label="Phone number" type="text" th:field="*{phoneNumber}" placeholder="Phone" required/>
                     </div>
                     <div class="field-error span-2" th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}"></div>
 
                     <div class="field span-2">
                         <i class="bi bi-geo-alt"></i>
-                        <input type="text" th:field="*{address}" placeholder="Address" required/>
+                        <input aria-label="Address" type="text" th:field="*{address}" placeholder="Address" required/>
                     </div>
                     <div class="field span-2">
                         <i class="bi bi-envelope"></i>
-                        <input type="email" th:field="*{email}" placeholder="Email" required/>
+                        <input aria-label="Email" type="email" th:field="*{email}" placeholder="Email" required/>
                     </div>
                     <div class="field-error span-2" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
 
                     <div class="field">
                         <i class="bi bi-lock"></i>
-                        <input type="password" name="password" placeholder="Password" minlength="8" required/>
+                        <input aria-label="Password" type="password" name="password" placeholder="Password" minlength="8" required/>
                     </div>
                     <div class="field">
                         <i class="bi bi-lock-fill"></i>
-                        <input type="password" name="confirmPassword" placeholder="Confirm" minlength="8" required/>
+                        <input aria-label="Confirm password" type="password" name="confirmPassword" placeholder="Confirm" minlength="8" required/>
                     </div>
                 </div>
 
@@ -113,7 +113,7 @@
         <!-- ============ SIGN IN (right half) ============ -->
         <div class="form-pane sign-in-pane">
             <form th:action="@{/login}" method="post" class="auth-form">
-                <h2 class="form-title">Sign in to MediSure</h2>
+                <h1 class="form-title">Sign in to MediSure</h1>
                 <p class="form-sub">Health Insurance Management System</p>
 
                 <div class="inline-alert success" th:if="${param.registered}">
@@ -133,11 +133,11 @@
 
                 <div class="field">
                     <i class="bi bi-person-badge"></i>
-                    <input type="text" name="identifier" placeholder="NIC (members) or email (staff)" required/>
+                    <input aria-label="NIC (members) or email (staff)" type="text" name="identifier" placeholder="NIC (members) or email (staff)" required/>
                 </div>
                 <div class="field">
                     <i class="bi bi-lock"></i>
-                    <input type="password" name="password" placeholder="Password" required/>
+                    <input aria-label="Password" type="password" name="password" placeholder="Password" required/>
                 </div>
 
                 <span class="muted-note">Members sign in with their NIC · staff with their work email ·
@@ -176,7 +176,7 @@
             </div>
         </div>
     </div>
-</div>
+</main>
 
 <script>
     const shell = document.getElementById('authShell');

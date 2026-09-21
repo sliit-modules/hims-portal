@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head(title='Plan Details')}"></head>
 <body>
 <div th:replace="~{fragments/layout :: navbar}"></div>
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
-    <main class="content" style="max-width:700px;">
+    <main id="main" tabindex="-1" class="content" style="max-width:700px;">
         <div class="page-header d-flex justify-content-between align-items-start">
             <div>
-                <h3 th:text="${plan.planName}">Plan Name</h3>
+                <h1 th:text="${plan.planName}" class="h3">Plan Name</h1>
                 <span class="pill" th:classappend="${plan.status.name() == 'ACTIVE'} ? 'pill-success' : 'pill-neutral'" th:text="${plan.status}">ACTIVE</span>
             </div>
         </div>

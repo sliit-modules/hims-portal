@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(title='Decide Application')}"></head>
 <body>
 <div th:replace="~{fragments/layout :: navbar}"></div>
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
-    <main class="content" style="max-width:680px;">
-        <h3 class="mb-3">Decide: <span th:text="${underwritingApp.applicationCode}"></span></h3>
-        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+    <main id="main" tabindex="-1" class="content" style="max-width:680px;">
+        <h1 class="h3 mb-3">Decide: <span th:text="${underwritingApp.applicationCode}"></span></h1>
+        <div role="alert" class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
         <div class="card p-3 mb-3">
             <dl class="row mb-0">
@@ -22,7 +22,7 @@
         <!-- ---------------- Suggested risk score and how it was worked out ---------------- -->
         <div class="card p-3 mb-3">
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <h6 class="mb-0"><i class="bi bi-calculator"></i> Suggested Risk Score</h6>
+                <h2 class="h6 mb-0"><i class="bi bi-calculator"></i> Suggested Risk Score</h2>
                 <span class="pill"
                       th:classappend="${risk.highRisk} ? 'pill-danger' : (${risk.score >= 30} ? 'pill-warning' : 'pill-success')"
                       th:text="${risk.score} + ' / 100'">20 / 100</span>
@@ -38,7 +38,7 @@
             <div style="font-size:0.88rem;">
                 Suggested premium loading: <strong th:text="${risk.suggestedLoadingPercent} + '%'">0%</strong>
             </div>
-            <div class="alert alert-warning mt-2 mb-0 py-2" th:if="${risk.highRisk}">
+            <div role="alert" class="alert alert-warning mt-2 mb-0 py-2" th:if="${risk.highRisk}">
                 <i class="bi bi-exclamation-triangle"></i>
                 High risk (70 or more): consider rejecting, or give a clear reason if you approve.
             </div>
@@ -50,26 +50,26 @@
 
         <form th:action="@{'/underwriting/' + ${underwritingApp.id} + '/decide'}" method="post" class="card p-4">
             <div class="mb-2">
-                <label class="form-label">Decision</label>
-                <select name="decision" class="form-select" required>
+                <label for="decision" class="form-label">Decision</label>
+                <select id="decision" name="decision" class="form-select" required>
                     <option value="APPROVED">Approve</option>
                     <option value="REJECTED" th:selected="${decision != null and decision.name() == 'REJECTED'}">Reject</option>
                 </select>
             </div>
             <div class="mb-2">
-                <label class="form-label">Risk Score (0-100)</label>
-                <input type="number" name="riskScore" class="form-control" min="0" max="100" required
+                <label for="riskScore" class="form-label">Risk Score (0-100)</label>
+                <input id="riskScore" type="number" name="riskScore" class="form-control" min="0" max="100" required
                        th:value="${riskScore != null ? riskScore : risk.score}"/>
             </div>
             <div class="mb-2">
-                <label class="form-label">Premium Loading % (0 for standard rate)</label>
-                <input type="number" step="0.01" name="premiumLoadingPercent" class="form-control" min="0" required
+                <label for="premiumLoadingPercent" class="form-label">Premium Loading % (0 for standard rate)</label>
+                <input id="premiumLoadingPercent" type="number" step="0.01" name="premiumLoadingPercent" class="form-control" min="0" required
                        th:value="${premiumLoadingPercent != null ? premiumLoadingPercent : risk.suggestedLoadingPercent}"/>
             </div>
             <div class="mb-3">
-                <label class="form-label">Reason for changing the suggested score
+                <label for="overrideReason" class="form-label">Reason for changing the suggested score
                     <span class="text-muted-soft">(required if more than 10 points away)</span></label>
-                <textarea name="overrideReason" class="form-control" rows="2" maxlength="500"
+                <textarea id="overrideReason" name="overrideReason" class="form-control" rows="2" maxlength="500"
                           th:text="${overrideReason}"></textarea>
             </div>
             <div>

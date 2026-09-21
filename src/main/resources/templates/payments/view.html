@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head(title='Payment Receipt')}"></head>
 <body>
 <div th:replace="~{fragments/layout :: navbar}"></div>
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
-    <main class="content" style="max-width:640px;">
+    <main id="main" tabindex="-1" class="content" style="max-width:640px;">
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="mb-0">Payment Receipt</h3>
+            <h1 class="h3 mb-0">Payment Receipt</h1>
             <a th:href="@{'/payments/' + ${payment.id} + '/receipt'}" target="_blank" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-printer"></i> Print receipt</a>
         </div>
-        <div class="alert alert-success" th:if="${param.paid}">
+        <div role="status" class="alert alert-success" th:if="${param.paid}">
             <i class="bi bi-check-circle"></i> Payment received through PayHere. Thank you!
         </div>
-        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+        <div role="alert" class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
         <div class="card p-4 mb-3">
             <dl class="row mb-0">
@@ -31,7 +31,7 @@
         </div>
 
         <!-- ---------------- Refund request status ---------------- -->
-        <div class="alert alert-warning" th:if="${payment.refundPending}">
+        <div role="alert" class="alert alert-warning" th:if="${payment.refundPending}">
             <i class="bi bi-hourglass-split"></i>
             Refund requested on <strong th:text="${#temporals.format(payment.refundRequestedAt, 'MMM d, yyyy HH:mm')}">date</strong>
             and waiting for approval by an admin or claims officer.
@@ -48,16 +48,16 @@
 
         <!-- ---------------- Policyholder: method, auto-pay and refund request ---------------- -->
         <div class="card p-3 mb-3" th:if="${payment.status.name() == 'PAID'}" sec:authorize="hasAnyRole('POLICYHOLDER','ADMIN')">
-            <h6>Change Method / Auto-Pay</h6>
+            <h2 class="h6">Change Method / Auto-Pay</h2>
             <form th:action="@{'/payments/' + ${payment.id} + '/method'}" method="post" class="row g-2">
                 <div class="col-md-6">
-                    <select name="method" class="form-select">
+                    <select aria-label="Payment method" name="method" class="form-select">
                         <option th:each="m : ${methods}" th:value="${m}" th:selected="${m == payment.method}" th:text="${m}"></option>
                     </select>
                 </div>
                 <div class="col-md-4 form-check mt-2">
-                    <input type="checkbox" name="autoPay" class="form-check-input" value="true" th:checked="${payment.autoPay}"/>
-                    <label class="form-check-label">Auto-Pay</label>
+                    <input id="autoPay" type="checkbox" name="autoPay" class="form-check-input" value="true" th:checked="${payment.autoPay}"/>
+                    <label for="autoPay" class="form-check-label">Auto-Pay</label>
                 </div>
                 <div class="col-md-2"><button type="submit" class="btn btn-outline-primary w-100">Update</button></div>
             </form>
@@ -65,13 +65,13 @@
 
         <div class="card p-3 mb-3" sec:authorize="hasRole('POLICYHOLDER')"
              th:if="${payment.status.name() == 'PAID' and !payment.refundPending}">
-            <h6><i class="bi bi-arrow-counterclockwise"></i> Request a Refund</h6>
+            <h2 class="h6"><i class="bi bi-arrow-counterclockwise"></i> Request a Refund</h2>
             <p class="text-muted-soft mb-2" style="font-size:0.82rem;">
                 An admin or claims officer reviews every refund request. The payment stays active until the
                 request is approved.
             </p>
             <form th:action="@{'/payments/' + ${payment.id} + '/refund-request'}" method="post">
-                <textarea name="reason" class="form-control mb-2" rows="2" maxlength="500" required
+                <textarea aria-label="Reason for the refund" name="reason" class="form-control mb-2" rows="2" maxlength="500" required
                           placeholder="Why do you need a refund? For example: I was charged twice."></textarea>
                 <button type="submit" class="btn btn-outline-warning">Submit Refund Request</button>
             </form>
@@ -79,10 +79,10 @@
 
         <!-- ---------------- Staff: decide a refund, or void a payment recorded in error ---------------- -->
         <div class="card p-3 mb-3" sec:authorize="hasAnyRole('ADMIN','CLAIMS_OFFICER')" th:if="${payment.refundPending}">
-            <h6><i class="bi bi-clipboard2-check"></i> Decide Refund Request</h6>
+            <h2 class="h6"><i class="bi bi-clipboard2-check"></i> Decide Refund Request</h2>
             <form th:action="@{'/payments/' + ${payment.id} + '/refund-decision'}" method="post" class="row g-2">
                 <div class="col-md-8">
-                    <input type="text" name="notes" class="form-control" maxlength="500" placeholder="Notes (required when rejecting)"/>
+                    <input aria-label="Decision notes" type="text" name="notes" class="form-control" maxlength="500" placeholder="Notes (required when rejecting)"/>
                 </div>
                 <div class="col-md-2"><button type="submit" name="approve" value="true" class="btn btn-success w-100">Approve</button></div>
                 <div class="col-md-2"><button type="submit" name="approve" value="false" class="btn btn-outline-danger w-100">Reject</button></div>
@@ -91,13 +91,13 @@
 
         <div class="card p-3 mb-3" sec:authorize="hasAnyRole('ADMIN','CLAIMS_OFFICER')"
              th:if="${payment.status.name() == 'PAID' and !payment.refundPending}">
-            <h6><i class="bi bi-slash-circle"></i> Void Payment</h6>
+            <h2 class="h6"><i class="bi bi-slash-circle"></i> Void Payment</h2>
             <p class="text-muted-soft mb-2" style="font-size:0.82rem;">
                 Use only for a payment recorded in error, such as a duplicate entry.
             </p>
             <form th:action="@{'/payments/' + ${payment.id} + '/void'}" method="post" class="row g-2">
                 <div class="col-md-9">
-                    <input type="text" name="reason" class="form-control" maxlength="500" required placeholder="Reason for voiding"/>
+                    <input aria-label="Reason for voiding" type="text" name="reason" class="form-control" maxlength="500" required placeholder="Reason for voiding"/>
                 </div>
                 <div class="col-md-3">
                     <button type="submit" class="btn btn-outline-danger w-100" onclick="return confirm('Void this payment?');">Void</button>

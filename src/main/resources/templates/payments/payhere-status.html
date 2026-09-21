@@ -1,22 +1,22 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(title='Online Payment')}"></head>
 <body>
 <div th:replace="~{fragments/layout :: navbar}"></div>
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
-    <main class="content" style="max-width:620px;">
-        <h3 class="mb-3">Online Payment</h3>
+    <main id="main" tabindex="-1" class="content" style="max-width:620px;">
+        <h1 class="h3 mb-3">Online Payment</h1>
 
-        <div class="alert alert-warning" th:if="${checkout.status == 'PENDING'}">
+        <div role="alert" class="alert alert-warning" th:if="${checkout.status == 'PENDING'}">
             <i class="bi bi-hourglass-split"></i>
             <strong>We are waiting for PayHere to confirm your payment.</strong>
             This usually takes a few seconds. If you completed the payment, press <em>Check again</em>.
         </div>
-        <div class="alert alert-secondary" th:if="${checkout.status == 'CANCELLED'}">
+        <div role="status" class="alert alert-secondary" th:if="${checkout.status == 'CANCELLED'}">
             The online payment was cancelled. No money was taken.
         </div>
-        <div class="alert alert-danger" th:if="${checkout.status == 'FAILED'}">
+        <div role="alert" class="alert alert-danger" th:if="${checkout.status == 'FAILED'}">
             PayHere could not complete the payment. No premium was recorded; please try again.
         </div>
 

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(title='Management Report')}"></head>
 <body>
 <style>
@@ -24,6 +24,13 @@
     table.r tr.total td, table.r tr.total th { font-weight: 800; border-top: 2px solid #94a3b8; }
     .foot { margin-top: 22px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: .75rem; color: #64748b; }
     .toolbar { max-width: 900px; margin: 16px auto 0; display: flex; gap: 8px; justify-content: flex-end; }
+    @media (max-width: 575px) {
+        .doc { padding: 24px 18px; margin: 12px; }
+        .doc-head { flex-direction: column; gap: 8px; }
+        .kpis { grid-template-columns: repeat(2, 1fr); }
+        .doc .row > [class^="col-"] { flex: 0 0 100%; max-width: 100%; }
+        .table-wrap { overflow-x: auto; }
+    }
     @media print {
         @page { size: A4; margin: 12mm; }
         body { background: #fff; }
@@ -32,12 +39,12 @@
     }
 </style>
 
-<div class="toolbar no-print">
+<nav class="toolbar no-print" aria-label="Page actions">
     <a th:href="@{/reports(from=${report.from},to=${report.to})}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back to reports</a>
     <button type="button" class="btn btn-primary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print / Save as PDF</button>
-</div>
+</nav>
 
-<div class="doc">
+<main class="doc" id="main">
     <div class="doc-head">
         <div class="brand"><i class="bi bi-shield-plus"></i> MediSure Lanka Insurance PLC
             <small>Health Insurance Management System</small></div>
@@ -58,6 +65,7 @@
     </div>
 
     <h2>By plan</h2>
+    <div class="table-wrap" tabindex="0" role="region" aria-label="Figures by plan">
     <table class="r">
         <thead><tr><th>Plan</th><th class="n">In force</th><th class="n">Premium income</th><th class="n">Claims</th>
             <th class="n">Claimed</th><th class="n">Approved</th><th class="n">Claims ratio</th></tr></thead>
@@ -82,6 +90,7 @@
         </tr>
         </tbody>
     </table>
+    </div>
 
     <div class="row g-4">
         <div class="col-7">
@@ -115,6 +124,6 @@
         Claims ratio = approved claims ÷ premium income for the period. Premium income counts payments still marked
         PAID, so refunded and voided payments are left out. Claims are counted in the period they were submitted.
     </div>
-</div>
+</main>
 </body>
 </html>
