@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -19,6 +20,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
+
+    public static final int MIN_PASSWORD_LENGTH = 8;
+
+    /** Letters and digits that cannot be confused when read aloud or copied (no 0/O, 1/l/I). */
+    private static final String TEMP_PASSWORD_ALPHABET =
+            "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+    private static final int TEMP_PASSWORD_LENGTH = 10;
+    private final SecureRandom random = new SecureRandom();
 
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuditService auditService) {
         this.userRepository = userRepository;
@@ -125,6 +134,60 @@ public class UserService {
 
         User saved = userRepository.save(user);
         auditService.log("User", saved.getId(), "PROFILE_UPDATED", actor, null);
+        return saved;
+    }
+
+    /**
+     * An administrator resets a password: a random temporary password is issued and returned so it
+     * can be handed to the user once. It is stored only as a hash and never written to the audit log.
+     * The user must choose their own password when they next sign in.
+     */
+    public String resetPassword(Long userId, User actor) {
+        User user = findById(userId);
+        StringBuilder temporary = new StringBuilder(TEMP_PASSWORD_LENGTH);
+        for (int i = 0; i < TEMP_PASSWORD_LENGTH; i++) {
+            temporary.append(TEMP_PASSWORD_ALPHABET.charAt(random.nextInt(TEMP_PASSWORD_ALPHABET.length())));
+        }
+        user.setPasswordHash(passwordEncoder.encode(temporary.toString()));
+        user.setPasswordChangeRequired(true);
+        user.setFailedLoginAttempts(0);
+        user.setLockedUntil(null);
+        userRepository.save(user);
+        auditService.log("User", user.getId(), "PASSWORD_RESET", actor,
+                "Temporary password issued; a new password is required at next sign-in");
+        return temporary.toString();
+    }
+
+    /** An administrator releases a locked account before its lock runs out. */
+    public void unlock(Long userId, User actor) {
+        User user = findById(userId);
+        user.setFailedLoginAttempts(0);
+        user.setLockedUntil(null);
+        userRepository.save(user);
+        auditService.log("User", user.getId(), "UNLOCKED", actor, null);
+    }
+
+    /** A signed-in user changes their own password; the current one must be given first. */
+    public User changePassword(Long userId, String currentPassword, String newPassword, String confirmPassword,
+                               User actor) {
+        User user = findById(userId);
+        if (currentPassword == null || !passwordEncoder.matches(currentPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("Your current password is incorrect");
+        }
+        if (newPassword == null || newPassword.length() < MIN_PASSWORD_LENGTH) {
+            throw new IllegalArgumentException(
+                    "Your new password must be at least " + MIN_PASSWORD_LENGTH + " characters");
+        }
+        if (!newPassword.equals(confirmPassword)) {
+            throw new IllegalArgumentException("The new passwords do not match");
+        }
+        if (passwordEncoder.matches(newPassword, user.getPasswordHash())) {
+            throw new IllegalArgumentException("Choose a password different from your current one");
+        }
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        user.setPasswordChangeRequired(false);
+        User saved = userRepository.save(user);
+        auditService.log("User", saved.getId(), "PASSWORD_CHANGED", actor, null);
         return saved;
     }
 

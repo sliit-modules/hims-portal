@@ -42,7 +42,9 @@ public class UserPrincipal implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        // Spring Security checks this before the password, so a locked account is refused even
+        // when the right password is given.
+        return !user.isLocked();
     }
 
     @Override

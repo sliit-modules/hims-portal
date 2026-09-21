@@ -189,11 +189,17 @@ Staff sign in with their **work email**; members sign in with their **NIC**.
 > request is approved or rejected by an admin or claims officer, and only staff can void a
 > payment recorded in error.
 
+> **Account security:** after 5 wrong passwords in a row an account is locked for 15 minutes.
+> The System Administrator can unlock it early, or reset the password from **Manage Users** —
+> the user then signs in with the one-time temporary password and must choose a new one.
+> Passwords must be at least 8 characters, and anyone can change their own password from the
+> key icon in the top bar.
+
 ---
 
 ## 🧪 Running the Tests
 
-The service layer is covered by Mockito unit tests — 34 tests across all six modules:
+The service layer is covered by Mockito unit tests — 69 tests across all six modules and sign-in security:
 
 ```bash
 mvn test
