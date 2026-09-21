@@ -65,10 +65,20 @@ Animations are switched off for people who ask their system for reduced motion.
 - **Confirmation prompts** use the browser's own dialog, which screen readers and keyboards already
   support.
 
+## Screen-reader test
+
+A manual pass with **VoiceOver** (macOS, Safari) on the live site on 21 Sep 2026, by Gunasinghe N.M.
+— **all checks passed**:
+
+| Page | Checked |
+|---|---|
+| Sign-in | page title announced; both fields read their names ("NIC (members) or email (staff)", "Password"); a failed sign-in's error is read out without moving focus |
+| Dashboard | "Skip to main content" is the first Tab stop and jumps past the menu; one level-1 heading then level-2 headings; banner, "Main menu" navigation and main landmarks; the premium chart reads its title and every figure; header buttons read "Notifications", "Change password", "Log out" |
+| File a Claim | every field reads its label and type; validation errors are read out |
+| Claims list | table cells are read with their column headers; the action column is announced as "Actions" |
+
 ## Known limits
 
-- **Screen-reader test.** A short VoiceOver pass (macOS: Cmd+F5) on sign-in and one form is still to
-  be done by the team; the automated and keyboard checks above do not replace it.
 - **PayHere's checkout page** is run by PayHere, not by us, so it is outside this review.
 - **The top search box** has no function yet; it is labelled but does nothing.
 
