@@ -89,11 +89,11 @@
 
                     <div class="field">
                         <i class="bi bi-lock"></i>
-                        <input type="password" name="password" placeholder="Password" minlength="6" required/>
+                        <input type="password" name="password" placeholder="Password" minlength="8" required/>
                     </div>
                     <div class="field">
                         <i class="bi bi-lock-fill"></i>
-                        <input type="password" name="confirmPassword" placeholder="Confirm" minlength="6" required/>
+                        <input type="password" name="confirmPassword" placeholder="Confirm" minlength="8" required/>
                     </div>
                 </div>
 
@@ -121,6 +121,13 @@
                 </div>
                 <div class="inline-alert danger" th:if="${param.error}">
                     Invalid credentials. Check your NIC/email and password.
+                </div>
+                <div class="inline-alert danger" th:if="${param.locked}">
+                    Too many wrong passwords — this account is locked for 15 minutes.
+                    An administrator can unlock it sooner.
+                </div>
+                <div class="inline-alert danger" th:if="${param.disabled}">
+                    This account has been disabled. Please contact the system administrator.
                 </div>
                 <div class="inline-alert info" th:if="${param.logout}">You have been signed out.</div>
 

@@ -7,17 +7,28 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
+    /** Pages that must stay reachable before either check is satisfied. */
+    private static final String[] ALWAYS_REACHABLE = {
+            "/login", "/logout", "/register", "/error", "/css/**", "/js/**"};
+
+    private final PasswordChangeInterceptor passwordChangeInterceptor;
     private final PrivacyConsentInterceptor privacyConsentInterceptor;
 
-    public WebConfig(PrivacyConsentInterceptor privacyConsentInterceptor) {
+    public WebConfig(PasswordChangeInterceptor passwordChangeInterceptor,
+                     PrivacyConsentInterceptor privacyConsentInterceptor) {
+        this.passwordChangeInterceptor = passwordChangeInterceptor;
         this.privacyConsentInterceptor = privacyConsentInterceptor;
     }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // The notice itself, sign-in/out, errors and static files must stay reachable without consent.
+        // Each check must let the other's page through, or a member who has to do both would be
+        // bounced between the two pages forever.
+        registry.addInterceptor(passwordChangeInterceptor)
+                .excludePathPatterns(ALWAYS_REACHABLE)
+                .excludePathPatterns("/account/password", "/privacy", "/privacy/**");
         registry.addInterceptor(privacyConsentInterceptor)
-                .excludePathPatterns("/privacy", "/privacy/**", "/login", "/logout", "/register",
-                        "/error", "/css/**", "/js/**");
+                .excludePathPatterns(ALWAYS_REACHABLE)
+                .excludePathPatterns("/privacy", "/privacy/**", "/account/password");
     }
 }

@@ -117,6 +117,25 @@ public class User {
         return privacyConsentAt != null && PrivacyNotice.VERSION.equals(privacyNoticeVersion);
     }
 
+    // ---------------- Sign-in protection ----------------
+
+    /** Wrong passwords in a row since the last successful sign-in; null means none. */
+    private Integer failedLoginAttempts;
+
+    /** Sign-in is refused until this time after too many wrong passwords; null means not locked. */
+    private LocalDateTime lockedUntil;
+
+    /** Set when an administrator resets the password: a new one must be chosen before continuing. */
+    private Boolean passwordChangeRequired;
+
+    public boolean isLocked() {
+        return lockedUntil != null && lockedUntil.isAfter(LocalDateTime.now());
+    }
+
+    public boolean mustChangePassword() {
+        return Boolean.TRUE.equals(passwordChangeRequired);
+    }
+
     /** First letters of the first two words of the full name, for avatar circles. */
     public String getInitials() {
         if (fullName == null || fullName.isBlank()) {

@@ -117,4 +117,84 @@ class UserServiceTest {
         assertNull(created.getId(), "a submitted id must never overwrite an existing account");
         assertEquals(Role.CLAIMS_OFFICER, created.getRole());
     }
+
+    // ---------------- password reset and change (PBI27) ----------------
+
+    private User admin() {
+        User admin = new User();
+        admin.setId(1L);
+        admin.setFullName("Karunarathna W.M.K.U.");
+        admin.setRole(Role.ADMIN);
+        return admin;
+    }
+
+    @Test
+    @DisplayName("A reset issues a temporary password, unlocks the account and requires a new password")
+    void resetIssuesTemporaryPassword() {
+        User member = newMember();
+        member.setId(5L);
+        member.setLockedUntil(java.time.LocalDateTime.now().plusMinutes(10));
+        User admin = admin();
+        when(userRepository.findById(5L)).thenReturn(Optional.of(member));
+        when(passwordEncoder.encode(anyString())).thenReturn("temporary-hash");
+
+        String temporary = userService.resetPassword(5L, admin);
+
+        assertEquals(10, temporary.length());
+        assertEquals("temporary-hash", member.getPasswordHash());
+        assertTrue(member.mustChangePassword());
+        assertFalse(member.isLocked());
+        verify(auditService).log(eq("User"), eq(5L), eq("PASSWORD_RESET"), eq(admin),
+                argThat(notes -> !notes.contains(temporary)));
+    }
+
+    @Test
+    @DisplayName("A password cannot be changed without the correct current password")
+    void changeRejectsWrongCurrentPassword() {
+        User member = newMember();
+        member.setId(5L);
+        member.setPasswordHash("stored-hash");
+        when(userRepository.findById(5L)).thenReturn(Optional.of(member));
+        when(passwordEncoder.matches("wrong-one", "stored-hash")).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> userService.changePassword(5L, "wrong-one", "NewSecret99", "NewSecret99", member));
+
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("A new password shorter than 8 characters is refused")
+    void changeRejectsShortPassword() {
+        User member = newMember();
+        member.setId(5L);
+        member.setPasswordHash("stored-hash");
+        when(userRepository.findById(5L)).thenReturn(Optional.of(member));
+        when(passwordEncoder.matches("Current123", "stored-hash")).thenReturn(true);
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> userService.changePassword(5L, "Current123", "short", "short", member));
+
+        assertTrue(ex.getMessage().contains("at least 8"));
+    }
+
+    @Test
+    @DisplayName("Changing the password clears a pending reset and is audited")
+    void changeClearsPendingReset() {
+        User member = newMember();
+        member.setId(5L);
+        member.setPasswordHash("temporary-hash");
+        member.setPasswordChangeRequired(true);
+        when(userRepository.findById(5L)).thenReturn(Optional.of(member));
+        when(passwordEncoder.matches("Temp2345ab", "temporary-hash")).thenReturn(true);
+        when(passwordEncoder.matches("NewSecret99", "temporary-hash")).thenReturn(false);
+        when(passwordEncoder.encode("NewSecret99")).thenReturn("new-hash");
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        User updated = userService.changePassword(5L, "Temp2345ab", "NewSecret99", "NewSecret99", member);
+
+        assertEquals("new-hash", updated.getPasswordHash());
+        assertFalse(updated.mustChangePassword());
+        verify(auditService).log(eq("User"), eq(5L), eq("PASSWORD_CHANGED"), eq(member), any());
+    }
 }

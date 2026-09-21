@@ -115,6 +115,8 @@
                             <span class="pill" th:classappend="${member.enabled} ? 'pill-success' : 'pill-danger'"
                                   th:text="${member.enabled} ? 'Active' : 'Disabled'">Active</span>
                         </dd>
+                        <dt class="col-sm-5" th:if="${ownProfile}">Password</dt>
+                        <dd class="col-sm-7" th:if="${ownProfile}"><a href="/account/password">Change password</a></dd>
                         <dt class="col-sm-5" th:if="${member.role.name() == 'POLICYHOLDER'}">Privacy Notice</dt>
                         <dd class="col-sm-7" th:if="${member.role.name() == 'POLICYHOLDER'}">
                             <span th:if="${member.privacyConsentAt}"
