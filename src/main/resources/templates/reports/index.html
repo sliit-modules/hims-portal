@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title='Management Reports')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+    <main class="content">
+        <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+                <h3>Management Reports</h3>
+                <div class="subtitle">Premium income, claims and the claims ratio for a period</div>
+            </div>
+            <div class="d-flex gap-2">
+                <a class="btn btn-outline-secondary btn-sm"
+                   th:href="@{/reports/export.csv(from=${report.from},to=${report.to})}">
+                    <i class="bi bi-filetype-csv"></i> Export CSV</a>
+                <a class="btn btn-primary btn-sm" target="_blank"
+                   th:href="@{/reports/print(from=${report.from},to=${report.to})}">
+                    <i class="bi bi-file-earmark-pdf"></i> Print / PDF</a>
+            </div>
+        </div>
+
+        <div class="alert alert-warning" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+        <form method="get" action="/reports" class="section-card mb-3 row g-2 align-items-end mx-0">
+            <div class="col-sm-4">
+                <label for="from" class="form-label">From</label>
+                <input type="date" id="from" name="from" class="form-control" th:value="${report.from}" required/>
+            </div>
+            <div class="col-sm-4">
+                <label for="to" class="form-label">To</label>
+                <input type="date" id="to" name="to" class="form-control" th:value="${report.to}" required/>
+            </div>
+            <div class="col-sm-4">
+                <button type="submit" class="btn btn-primary w-100"><i class="bi bi-arrow-repeat"></i> Show report</button>
+            </div>
+        </form>
+
+        <div class="row g-3 mb-3">
+            <div class="col-6 col-lg-3">
+                <div class="stat-card tone-success">
+                    <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+                    <div class="stat-value" th:text="'LKR ' + ${#numbers.formatDecimal(report.total.premiumIncome,1,'COMMA',0,'POINT')}">0</div>
+                    <div class="stat-label">Premium income (<span th:text="${report.total.payments}">0</span> payments)</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card tone-brand">
+                    <div class="stat-icon"><i class="bi bi-hospital"></i></div>
+                    <div class="stat-value" th:text="'LKR ' + ${#numbers.formatDecimal(report.total.approved,1,'COMMA',0,'POINT')}">0</div>
+                    <div class="stat-label">Approved claims (<span th:text="${report.total.approvedClaims}">0</span>)</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card"
+                     th:classappend="${report.total.claimsRatio == null} ? 'tone-brand' : (${report.total.claimsRatio > 100} ? 'tone-danger' : (${report.total.claimsRatio > 70} ? 'tone-warning' : 'tone-success'))">
+                    <div class="stat-icon"><i class="bi bi-percent"></i></div>
+                    <div class="stat-value" th:text="${report.total.claimsRatio == null} ? '—' : ${report.total.claimsRatio} + '%'">0%</div>
+                    <div class="stat-label">Claims ratio (approved ÷ income)</div>
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <div class="stat-card tone-brand">
+                    <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
+                    <div class="stat-value" th:text="${report.total.policiesInForce}">0</div>
+                    <div class="stat-label">Policies in force today</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-card mb-3">
+            <div class="table-title" id="byPlan">By plan
+                <small>A claims ratio above 70% is amber; above 100% (claims cost more than the premiums earned) is red.</small></div>
+            <div class="table-responsive">
+            <table class="table table-sm" aria-labelledby="byPlan">
+                <thead><tr><th scope="col">Plan</th><th scope="col" class="text-end">In force</th><th scope="col" class="text-end">Premium income</th>
+                    <th scope="col" class="text-end">Claims</th><th scope="col" class="text-end">Claimed</th><th scope="col" class="text-end">Approved</th>
+                    <th scope="col" class="text-end">Claims ratio</th></tr></thead>
+                <tbody>
+                <tr th:each="row : ${report.plans}" th:object="${row}">
+                    <th scope="row" th:text="*{planName}">Plan</th>
+                    <td class="text-end" th:text="*{policiesInForce}">0</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(row.premiumIncome,1,'COMMA',2,'POINT')}">0</td>
+                    <td class="text-end" th:text="*{claims}">0</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(row.claimed,1,'COMMA',2,'POINT')}">0</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(row.approved,1,'COMMA',2,'POINT')}">0</td>
+                    <td class="text-end">
+                        <span th:if="${row.claimsRatio == null}" class="text-muted-soft" title="No premium income in this period">—</span>
+                        <span th:unless="${row.claimsRatio == null}" class="pill"
+                              th:classappend="${row.claimsRatio > 100} ? 'pill-danger' : (${row.claimsRatio > 70} ? 'pill-warning' : 'pill-success')"
+                              th:text="${row.claimsRatio} + '%'">0%</span>
+                    </td>
+                </tr>
+                <tr class="fw-bold" th:with="row=${report.total}">
+                    <th scope="row">All plans</th>
+                    <td class="text-end" th:text="${row.policiesInForce}">0</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(row.premiumIncome,1,'COMMA',2,'POINT')}">0</td>
+                    <td class="text-end" th:text="${row.claims}">0</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(row.claimed,1,'COMMA',2,'POINT')}">0</td>
+                    <td class="text-end" th:text="${#numbers.formatDecimal(row.approved,1,'COMMA',2,'POINT')}">0</td>
+                    <td class="text-end" th:text="${row.claimsRatio == null} ? '—' : ${row.claimsRatio} + '%'">0%</td>
+                </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-lg-7">
+                <div class="table-card">
+                    <div class="table-title" id="byMonth">By month</div>
+                    <table class="table table-sm" aria-labelledby="byMonth">
+                        <thead><tr><th scope="col">Month</th><th scope="col" class="text-end">Premium income</th><th scope="col" class="text-end">Approved claims</th></tr></thead>
+                        <tbody>
+                        <tr th:each="m : ${report.months}">
+                            <th scope="row" th:text="${#temporals.format(m.month.atDay(1), 'MMMM yyyy')}">Month</th>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(m.premiumIncome,1,'COMMA',2,'POINT')}">0</td>
+                            <td class="text-end" th:text="${#numbers.formatDecimal(m.approved,1,'COMMA',2,'POINT')}">0</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="table-card">
+                    <div class="table-title" id="byStatus">Claims by status
+                        <small>Claims submitted in the period</small></div>
+                    <table class="table table-sm" aria-labelledby="byStatus">
+                        <thead><tr><th scope="col">Status</th><th scope="col" class="text-end">Claims</th></tr></thead>
+                        <tbody>
+                        <tr th:each="entry : ${report.claimsByStatus}">
+                            <th scope="row" th:text="${entry.key}">STATUS</th>
+                            <td class="text-end" th:text="${entry.value}">0</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <p class="text-muted-soft mt-3" style="font-size:0.8rem;">
+            Premium income counts payments still marked PAID in the period, so refunded and voided payments are left out.
+            Claims are counted in the period they were submitted. Every export is recorded in the audit log.
+        </p>
+    </main>
+</div>
+</body>
+</html>
