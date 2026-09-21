@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title='Management Report')}"></head>
+<body>
+<style>
+    body { background: #eef1f6; }
+    .doc { max-width: 900px; margin: 24px auto; background: #fff; padding: 40px 48px;
+           border-radius: 10px; box-shadow: 0 6px 24px rgba(15, 23, 42, .08); color: #0f172a; }
+    .doc-head { display: flex; justify-content: space-between; align-items: flex-start;
+                border-bottom: 3px solid #1d4ed8; padding-bottom: 14px; margin-bottom: 18px; }
+    .brand { font-weight: 800; font-size: 1.2rem; color: #1d4ed8; }
+    .brand small { display: block; font-weight: 500; font-size: .8rem; color: #475569; }
+    .doc h1 { font-size: 1.4rem; font-weight: 800; margin: 0 0 4px; }
+    .doc h2 { font-size: 1rem; font-weight: 700; margin: 22px 0 8px; }
+    .muted { color: #64748b; font-size: .85rem; }
+    .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 16px 0; }
+    .kpi { background: #f1f5f9; border-radius: 8px; padding: 10px 12px; }
+    .kpi b { display: block; font-size: 1.05rem; }
+    .kpi span { font-size: .75rem; color: #475569; }
+    table.r { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    table.r th, table.r td { border-bottom: 1px solid #e2e8f0; padding: 5px 6px; }
+    table.r thead th { background: #f1f5f9; text-align: left; }
+    table.r .n { text-align: right; }
+    table.r tr.total td, table.r tr.total th { font-weight: 800; border-top: 2px solid #94a3b8; }
+    .foot { margin-top: 22px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: .75rem; color: #64748b; }
+    .toolbar { max-width: 900px; margin: 16px auto 0; display: flex; gap: 8px; justify-content: flex-end; }
+    @media print {
+        @page { size: A4; margin: 12mm; }
+        body { background: #fff; }
+        .no-print { display: none !important; }
+        .doc { box-shadow: none; margin: 0; padding: 0; max-width: none; }
+    }
+</style>
+
+<div class="toolbar no-print">
+    <a th:href="@{/reports(from=${report.from},to=${report.to})}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back to reports</a>
+    <button type="button" class="btn btn-primary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print / Save as PDF</button>
+</div>
+
+<div class="doc">
+    <div class="doc-head">
+        <div class="brand"><i class="bi bi-shield-plus"></i> MediSure Lanka Insurance PLC
+            <small>Health Insurance Management System</small></div>
+        <div class="text-end muted">
+            Generated <span th:text="${#temporals.format(report.generatedAt, 'd MMMM yyyy, HH:mm')}">date</span><br/>
+            Confidential — for management use
+        </div>
+    </div>
+
+    <h1>Management Report</h1>
+    <div class="muted">Period: <strong th:text="${#temporals.format(report.from, 'd MMM yyyy')} + ' to ' + ${#temporals.format(report.to, 'd MMM yyyy')}">period</strong></div>
+
+    <div class="kpis">
+        <div class="kpi"><b th:text="'LKR ' + ${#numbers.formatDecimal(report.total.premiumIncome,1,'COMMA',2,'POINT')}">0</b><span>Premium income</span></div>
+        <div class="kpi"><b th:text="'LKR ' + ${#numbers.formatDecimal(report.total.approved,1,'COMMA',2,'POINT')}">0</b><span>Approved claims</span></div>
+        <div class="kpi"><b th:text="${report.total.claimsRatio == null} ? '—' : ${report.total.claimsRatio} + '%'">0%</b><span>Claims ratio</span></div>
+        <div class="kpi"><b th:text="${report.total.policiesInForce}">0</b><span>Policies in force</span></div>
+    </div>
+
+    <h2>By plan</h2>
+    <table class="r">
+        <thead><tr><th>Plan</th><th class="n">In force</th><th class="n">Premium income</th><th class="n">Claims</th>
+            <th class="n">Claimed</th><th class="n">Approved</th><th class="n">Claims ratio</th></tr></thead>
+        <tbody>
+        <tr th:each="row : ${report.plans}">
+            <th th:text="${row.planName}">Plan</th>
+            <td class="n" th:text="${row.policiesInForce}">0</td>
+            <td class="n" th:text="${#numbers.formatDecimal(row.premiumIncome,1,'COMMA',2,'POINT')}">0</td>
+            <td class="n" th:text="${row.claims}">0</td>
+            <td class="n" th:text="${#numbers.formatDecimal(row.claimed,1,'COMMA',2,'POINT')}">0</td>
+            <td class="n" th:text="${#numbers.formatDecimal(row.approved,1,'COMMA',2,'POINT')}">0</td>
+            <td class="n" th:text="${row.claimsRatio == null} ? '—' : ${row.claimsRatio} + '%'">0%</td>
+        </tr>
+        <tr class="total" th:with="row=${report.total}">
+            <th>All plans</th>
+            <td class="n" th:text="${row.policiesInForce}">0</td>
+            <td class="n" th:text="${#numbers.formatDecimal(row.premiumIncome,1,'COMMA',2,'POINT')}">0</td>
+            <td class="n" th:text="${row.claims}">0</td>
+            <td class="n" th:text="${#numbers.formatDecimal(row.claimed,1,'COMMA',2,'POINT')}">0</td>
+            <td class="n" th:text="${#numbers.formatDecimal(row.approved,1,'COMMA',2,'POINT')}">0</td>
+            <td class="n" th:text="${row.claimsRatio == null} ? '—' : ${row.claimsRatio} + '%'">0%</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="row g-4">
+        <div class="col-7">
+            <h2>By month</h2>
+            <table class="r">
+                <thead><tr><th>Month</th><th class="n">Premium income</th><th class="n">Approved claims</th></tr></thead>
+                <tbody>
+                <tr th:each="m : ${report.months}">
+                    <th th:text="${#temporals.format(m.month.atDay(1), 'MMM yyyy')}">Month</th>
+                    <td class="n" th:text="${#numbers.formatDecimal(m.premiumIncome,1,'COMMA',2,'POINT')}">0</td>
+                    <td class="n" th:text="${#numbers.formatDecimal(m.approved,1,'COMMA',2,'POINT')}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-5">
+            <h2>Claims by status</h2>
+            <table class="r">
+                <thead><tr><th>Status</th><th class="n">Claims</th></tr></thead>
+                <tbody>
+                <tr th:each="entry : ${report.claimsByStatus}">
+                    <th th:text="${entry.key}">STATUS</th>
+                    <td class="n" th:text="${entry.value}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="foot">
+        Claims ratio = approved claims ÷ premium income for the period. Premium income counts payments still marked
+        PAID, so refunded and voided payments are left out. Claims are counted in the period they were submitted.
+    </div>
+</div>
+</body>
+</html>

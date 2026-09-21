@@ -179,7 +179,7 @@ Staff sign in with their **work email**; members sign in with their **NIC**.
 | Plan Administrator | `plans@medisure.lk` | Karunarathna W.M.K.U. | Insurance plans, limits, pricing |
 | Customer Relations | `support@medisure.lk` | Kavisekara K.M.H.N. | Support tickets and responses |
 | **Policyholder** | `199408089876` | Ramanayaka U.K.D. | Premium payments, receipts, auto-pay, refund requests |
-| System Administrator | `admin@medisure.lk` | *(system account)* | Full oversight, audit log, user management |
+| System Administrator | `admin@medisure.lk` | *(system account)* | Full oversight, audit log, user management, management reports |
 | Policyholder (demo member) | `199009098765` | — | Own cover, premiums, claims, dependents |
 
 > Premium & Payment Management is the one module whose owner persona is the **Policyholder** —
@@ -199,7 +199,7 @@ Staff sign in with their **work email**; members sign in with their **NIC**.
 
 ## 🧪 Running the Tests
 
-The service layer is covered by Mockito unit tests — 105 tests across all six modules, sign-in security, audit logging, notifications and PayHere payments:
+The service layer is covered by Mockito unit tests — 111 tests across all six modules, sign-in security, audit logging, notifications, PayHere payments and management reports:
 
 ```bash
 mvn test
