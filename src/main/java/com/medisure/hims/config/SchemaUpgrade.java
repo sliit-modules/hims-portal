@@ -32,6 +32,8 @@ public class SchemaUpgrade implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         addEnumValue("underwriting_applications", "decision", "WITHDRAWN",
                 "ENUM('APPROVED','PENDING','REJECTED','WITHDRAWN') NOT NULL");
+        addEnumValue("claims", "status", "VOIDED",
+                "ENUM('APPROVED','REJECTED','SUBMITTED','VOIDED','WITHDRAWN') NOT NULL");
     }
 
     private void addEnumValue(String table, String column, String value, String newDefinition) {

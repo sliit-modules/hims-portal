@@ -178,7 +178,7 @@
                             <div class="text-end">
                                 <div class="amount" th:text="'LKR ' + ${#numbers.formatDecimal(c.amountClaimed,0,'COMMA',0,'POINT')}">0</div>
                                 <span class="pill"
-                                      th:classappend="${c.status.name() == 'APPROVED'} ? 'pill-success' : (${c.status.name() == 'REJECTED'} ? 'pill-danger' : (${c.status.name() == 'WITHDRAWN'} ? 'pill-neutral' : 'pill-warning'))"
+                                      th:classappend="${c.status.name() == 'APPROVED'} ? 'pill-success' : (${c.status.name() == 'REJECTED'} ? 'pill-danger' : (${c.status.name() == 'WITHDRAWN' or c.status.name() == 'VOIDED'} ? 'pill-neutral' : 'pill-warning'))"
                                       th:text="${c.status}">STATUS</span>
                             </div>
                         </div>
@@ -543,7 +543,7 @@
                             <div class="text-end">
                                 <div class="amount" th:text="'LKR ' + ${#numbers.formatDecimal(c.amountClaimed,0,'COMMA',0,'POINT')}">0</div>
                                 <span class="pill"
-                                      th:classappend="${c.status.name() == 'APPROVED'} ? 'pill-success' : (${c.status.name() == 'REJECTED'} ? 'pill-danger' : (${c.status.name() == 'WITHDRAWN'} ? 'pill-neutral' : 'pill-warning'))"
+                                      th:classappend="${c.status.name() == 'APPROVED'} ? 'pill-success' : (${c.status.name() == 'REJECTED'} ? 'pill-danger' : (${c.status.name() == 'WITHDRAWN' or c.status.name() == 'VOIDED'} ? 'pill-neutral' : 'pill-warning'))"
                                       th:text="${c.status}">STATUS</span>
                             </div>
                         </div>

@@ -4,5 +4,7 @@ public enum ClaimStatus {
     SUBMITTED,
     APPROVED,
     REJECTED,
-    WITHDRAWN
+    WITHDRAWN,
+    /** Closed by a claims officer as a duplicate of another claim; never paid. */
+    VOIDED
 }
