@@ -50,6 +50,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/claims/*/documents")
                     .hasAnyRole("POLICYHOLDER", "SALES_AGENT", "CLAIMS_OFFICER", "ADMIN")
 
+                // PayHere's server calls this; it is trusted only after its md5sig signature is checked.
+                .requestMatchers(HttpMethod.POST, "/payments/payhere/notify").permitAll()
                 .requestMatchers(HttpMethod.GET, "/payments/**").hasAnyRole("POLICYHOLDER", "ADMIN", "CLAIMS_OFFICER", "SALES_AGENT")
                 .requestMatchers(HttpMethod.POST, "/payments/*/refund-decision", "/payments/*/void")
                     .hasAnyRole("CLAIMS_OFFICER", "ADMIN")
@@ -67,6 +69,8 @@ public class SecurityConfig {
 
                 .anyRequest().authenticated()
             )
+            // PayHere cannot send our CSRF token; the notification is verified by its signature instead.
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/payments/payhere/notify"))
             .formLogin(form -> form
                 .loginPage("/login")
                 .usernameParameter("identifier")

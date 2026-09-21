@@ -44,6 +44,24 @@ app:
   # Claim supporting documents are stored in this directory
   upload-dir: uploads
 
+# Online premium payments through PayHere (https://sandbox.payhere.lk for testing).
+# Leave enabled: false to keep payments recorded inside the portal only.
+# Never commit real values: set them here in your local application.yml (ignored by Git)
+# or as environment variables.
+payhere:
+  enabled: ${PAYHERE_ENABLED:false}
+  sandbox: true
+  # Integrations > Add Domain/App (domain "localhost" for local testing)
+  merchant-id: ${PAYHERE_MERCHANT_ID:}
+  merchant-secret: ${PAYHERE_MERCHANT_SECRET:}
+  # Settings > API Keys, with only the "Payment Retrieval API" permission
+  app-id: ${PAYHERE_APP_ID:}
+  app-secret: ${PAYHERE_APP_SECRET:}
+  # How members' browsers reach this app, for PayHere's return and cancel links
+  app-base-url: http://localhost:8080
+  # Optional public URL for PayHere's server-to-server notification (needed once the app is online)
+  notify-url:
+
 logging:
   level:
     com.medisure.hims: INFO

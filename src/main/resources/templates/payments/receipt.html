@@ -60,6 +60,8 @@
         <dt>Date paid</dt><dd th:text="${#temporals.format(payment.paidAt, 'd MMMM yyyy, HH:mm')}">date</dd>
         <dt>Payment method</dt><dd th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(payment.method, '_', ' ')))}">Card</dd>
         <dt>Status</dt><dd th:text="${payment.status}">PAID</dd>
+        <dt th:if="${payment.gatewayReference}">PayHere reference</dt>
+        <dd th:if="${payment.gatewayReference}" th:text="${payment.gatewayReference}"></dd>
         <dt th:if="${payment.voidReason}">Void reason</dt><dd th:if="${payment.voidReason}" th:text="${payment.voidReason}"></dd>
     </dl>
 

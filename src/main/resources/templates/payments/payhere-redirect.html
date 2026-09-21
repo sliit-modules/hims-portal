@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title='Redirecting to PayHere')}"></head>
+<body>
+<main class="container d-flex align-items-center justify-content-center" style="min-height:100vh;">
+    <div class="section-card text-center p-5" style="max-width:480px;">
+        <div class="spinner-border text-primary mb-3" role="status"></div>
+        <h4>Taking you to PayHere…</h4>
+        <p class="text-muted mb-1">
+            Premium for <strong th:text="${checkout.policy.policyCode}">POL</strong>:
+            <strong th:text="'LKR ' + ${#numbers.formatDecimal(checkout.amount, 1, 'COMMA', 2, 'POINT')}">LKR 0.00</strong>
+        </p>
+        <p class="text-muted" style="font-size:0.85rem;">You will pay on PayHere's secure page. MediSure never sees your card details.</p>
+
+        <!--/* th:attr (not th:action) so Spring does not add our CSRF token to a form posted to another site. */-->
+        <form id="payhereForm" method="post" th:attr="action=${checkoutUrl}">
+            <input th:each="f : ${fields}" type="hidden" th:name="${f.key}" th:value="${f.value}"/>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-lock"></i> Continue to PayHere</button>
+        </form>
+    </div>
+</main>
+<script>document.getElementById('payhereForm').submit();</script>
+</body>
+</html>

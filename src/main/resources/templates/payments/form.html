@@ -8,6 +8,25 @@
     <main class="content" style="max-width:600px;">
         <h3 class="mb-3">Pay Premium — <span th:text="${policy.policyCode}"></span></h3>
         <p class="text-muted">Due: <strong th:text="${policy.nextDueDate}"></strong> &middot; Premium: <strong th:text="${policy.premiumAmount}"></strong> (<span th:text="${policy.premiumFrequency}"></span>)</p>
+        <div class="alert alert-warning" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+        <!-- ---------------- Pay online through PayHere (shown only when it is set up) ---------------- -->
+        <div class="card p-4 mb-3" th:if="${@payHereService.isAvailable()}">
+            <h6 class="mb-1"><i class="bi bi-credit-card-2-front"></i> Pay online with PayHere</h6>
+            <p class="text-muted-soft mb-3" style="font-size:0.85rem;">
+                Pay this premium by card on PayHere's secure page. MediSure never sees your card details, and the
+                payment is recorded as soon as PayHere confirms it.
+            </p>
+            <form th:action="@{/payments/payhere/checkout}" method="post" class="m-0">
+                <input type="hidden" name="policyId" th:value="${policy.id}"/>
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-lock"></i>
+                    <span th:text="'Pay LKR ' + ${#numbers.formatDecimal(policy.premiumAmount, 1, 'COMMA', 2, 'POINT')} + ' online'">Pay online</span>
+                </button>
+            </form>
+        </div>
+
+        <h6 class="text-muted-soft mb-2" th:if="${@payHereService.isAvailable()}">Or record a payment made another way</h6>
         <form th:action="@{/payments}" method="post" class="card p-4">
             <input type="hidden" name="policyId" th:value="${policy.id}"/>
             <div class="mb-2">
