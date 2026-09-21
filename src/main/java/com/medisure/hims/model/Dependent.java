@@ -1,5 +1,6 @@
 package com.medisure.hims.model;
 
+import com.medisure.hims.security.EncryptedStringConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -58,13 +59,16 @@ public class Dependent {
     @Column(nullable = false)
     private BloodGroup bloodGroup = BloodGroup.UNKNOWN;
 
-    @Column(length = 500)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(length = 1000)
     private String allergies;
 
-    @Column(length = 1000)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(length = 2000)
     private String chronicConditions;
 
-    @Column(length = 500)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(length = 1000)
     private String currentMedications;
 
     // ---------------- Privacy consent ----------------

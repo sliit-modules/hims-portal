@@ -1,5 +1,6 @@
 package com.medisure.hims.model;
 
+import com.medisure.hims.security.EncryptedStringConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -52,7 +53,8 @@ public class Claim {
     private LocalDate treatmentDate;
 
     @NotBlank(message = "Diagnosis summary is required")
-    @Column(nullable = false, length = 1000)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(nullable = false, length = 2000)
     private String diagnosisSummary;
 
     @NotNull

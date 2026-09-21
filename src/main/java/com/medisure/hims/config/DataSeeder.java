@@ -25,6 +25,8 @@ import java.util.Random;
  * Default password for every seeded account is "password123".
  */
 @Component
+// Seeds before EncryptionMigration (which runs last), so the demo's medical data and files are encrypted too.
+@org.springframework.core.annotation.Order(org.springframework.core.Ordered.LOWEST_PRECEDENCE - 100)
 public class DataSeeder implements CommandLineRunner {
 
     private static final String DEFAULT_PASSWORD = "password123";

@@ -4,8 +4,9 @@ import com.medisure.hims.model.Claim;
 import com.medisure.hims.model.ClaimDocument;
 import com.medisure.hims.model.User;
 import com.medisure.hims.repository.ClaimDocumentRepository;
+import com.medisure.hims.security.FieldCipher;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,6 +31,9 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
  * Uploads are never trusted: the client's filename is kept only for display, the file is written
  * under a generated UUID name, the type must be on the allowlist, and the resolved path is
  * checked to be inside the upload root so a crafted name cannot escape it.
+ *
+ * Files are medical records, so they are encrypted on disk with the same key as the medical fields
+ * (see {@link FieldCipher}) and only decrypted when an allowed user opens them.
  */
 @Service
 public class ClaimDocumentService {
@@ -41,12 +45,14 @@ public class ClaimDocumentService {
 
     private final ClaimDocumentRepository documentRepository;
     private final AuditService auditService;
+    private final FieldCipher cipher;
     private final Path uploadRoot;
 
     public ClaimDocumentService(ClaimDocumentRepository documentRepository, AuditService auditService,
-                                 @Value("${app.upload-dir:uploads}") String uploadDir) {
+                                 FieldCipher cipher, @Value("${app.upload-dir:uploads}") String uploadDir) {
         this.documentRepository = documentRepository;
         this.auditService = auditService;
+        this.cipher = cipher;
         this.uploadRoot = Paths.get(uploadDir).toAbsolutePath().normalize();
         try {
             Files.createDirectories(this.uploadRoot);
@@ -115,7 +121,7 @@ public class ClaimDocumentService {
 
         try {
             Files.createDirectories(claimDir);
-            Files.copy(file.getInputStream(), claimDir.resolve(storedName));
+            Files.write(claimDir.resolve(storedName), cipher.encryptFile(file.getBytes()));
         } catch (IOException ex) {
             throw new UncheckedIOException("Could not store " + file.getOriginalFilename(), ex);
         }
@@ -135,7 +141,7 @@ public class ClaimDocumentService {
         return saved;
     }
 
-    /** Resolves the document's bytes, guarding against any path escaping the upload root. */
+    /** The document's decrypted bytes, guarding against any path escaping the upload root. */
     public Resource loadAsResource(ClaimDocument document) {
         Path file = uploadRoot.resolve("claims")
                 .resolve(String.valueOf(document.getClaim().getId()))
@@ -144,7 +150,19 @@ public class ClaimDocumentService {
         if (!file.startsWith(uploadRoot) || !Files.exists(file)) {
             throw new ResponseStatusException(NOT_FOUND, "The stored file is no longer available");
         }
-        return new FileSystemResource(file);
+        try {
+            return new ByteArrayResource(cipher.decryptFile(Files.readAllBytes(file)));
+        } catch (IOException ex) {
+            throw new UncheckedIOException("Could not read " + document.getOriginalFileName(), ex);
+        }
+    }
+
+    /** Where a document's file lives on disk (inside the upload root). */
+    public Path pathOf(ClaimDocument document) {
+        return uploadRoot.resolve("claims")
+                .resolve(String.valueOf(document.getClaim().getId()))
+                .resolve(document.getStoredFileName())
+                .normalize();
     }
 
     public void delete(ClaimDocument document, User actor) {

@@ -1,5 +1,6 @@
 package com.medisure.hims.model;
 
+import com.medisure.hims.security.EncryptedStringConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -39,7 +40,8 @@ public class UnderwritingApplication {
 
     private boolean hasPreExistingConditions;
 
-    @Column(length = 1000)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(length = 2000)
     private String conditionsNotes;
 
     @NotNull

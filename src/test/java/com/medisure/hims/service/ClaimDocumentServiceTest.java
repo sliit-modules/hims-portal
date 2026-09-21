@@ -11,12 +11,16 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.medisure.hims.security.FieldCipher;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class ClaimDocumentServiceTest {
+
+    /** A fake, test-only AES-256 key (Base64 of 32 ASCII bytes). */
+    static final String TEST_KEY = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=";
 
     @Mock
     private ClaimDocumentRepository documentRepository;
@@ -31,7 +35,8 @@ class ClaimDocumentServiceTest {
 
     @BeforeEach
     void setUp() {
-        documentService = new ClaimDocumentService(documentRepository, auditService, uploadDir.toString());
+        documentService = new ClaimDocumentService(documentRepository, auditService,
+                new FieldCipher(TEST_KEY), uploadDir.toString());
     }
 
     @Test

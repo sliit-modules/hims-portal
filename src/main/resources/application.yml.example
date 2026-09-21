@@ -43,6 +43,12 @@ spring:
 app:
   # Claim supporting documents are stored in this directory
   upload-dir: uploads
+  encryption:
+    # REQUIRED. AES-256 key that encrypts medical information in the database and claim documents
+    # on disk. Generate one per deployment with:  openssl rand -base64 32
+    # Keep a copy somewhere safe (e.g. a password manager), separately from database backups:
+    # without it the medical data cannot be read. Never commit it.
+    key: ${HIMS_FIELD_KEY:}
 
 # Online premium payments through PayHere (https://sandbox.payhere.lk for testing).
 # Leave enabled: false to keep payments recorded inside the portal only.
