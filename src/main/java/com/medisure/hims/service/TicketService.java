@@ -16,10 +16,13 @@ public class TicketService {
 
     private final SupportTicketRepository ticketRepository;
     private final AuditService auditService;
+    private final NotificationService notificationService;
 
-    public TicketService(SupportTicketRepository ticketRepository, AuditService auditService) {
+    public TicketService(SupportTicketRepository ticketRepository, AuditService auditService,
+                         NotificationService notificationService) {
         this.ticketRepository = ticketRepository;
         this.auditService = auditService;
+        this.notificationService = notificationService;
     }
 
     public List<SupportTicket> findAllFor(User currentUser) {
@@ -53,6 +56,7 @@ public class TicketService {
         ticket.setCreatedAt(LocalDateTime.now());
         SupportTicket saved = ticketRepository.save(ticket);
         auditService.log("SupportTicket", saved.getId(), "LOGGED", raisedBy, subject);
+        notificationService.notifyRole(Role.CRE, "New support ticket", subject, "/tickets/" + saved.getId());
         return saved;
     }
 
@@ -66,6 +70,8 @@ public class TicketService {
         ticket.setUpdatedAt(LocalDateTime.now());
         SupportTicket saved = ticketRepository.save(ticket);
         auditService.log("SupportTicket", saved.getId(), "RESPONDED:" + status, actor, response);
+        notificationService.notify(saved.getRaisedBy(), "Reply to your ticket: " + saved.getSubject(),
+                response, "/tickets/" + saved.getId());
         return saved;
     }
 
@@ -78,5 +84,7 @@ public class TicketService {
         ticket.setUpdatedAt(LocalDateTime.now());
         ticketRepository.save(ticket);
         auditService.log("SupportTicket", ticket.getId(), "CLOSED", actor, null);
+        notificationService.notify(ticket.getRaisedBy(), "Ticket closed: " + ticket.getSubject(),
+                "Your support ticket has been resolved and closed.", "/tickets/" + ticket.getId());
     }
 }

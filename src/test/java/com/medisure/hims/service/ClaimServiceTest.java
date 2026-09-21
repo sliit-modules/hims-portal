@@ -33,6 +33,9 @@ class ClaimServiceTest {
     @Mock
     private AuditService auditService;
 
+    @Mock
+    private NotificationService notificationService;
+
     @InjectMocks
     private ClaimService claimService;
 
@@ -260,5 +263,18 @@ class ClaimServiceTest {
 
         assertTrue(ex.getMessage().contains("before this policy's cover started"));
         verify(claimRepository, never()).save(any(Claim.class));
+    }
+
+    @Test
+    @DisplayName("Deciding a claim notifies the claimant with the decision")
+    void decisionNotifiesTheClaimant() {
+        when(claimRepository.findById(1L)).thenReturn(Optional.of(testClaim));
+        when(claimRepository.findByPolicyAndStatus(policy, ClaimStatus.APPROVED)).thenReturn(List.of());
+        when(claimRepository.save(any(Claim.class))).thenReturn(testClaim);
+
+        claimService.decide(1L, ClaimStatus.APPROVED, "Covered under surgical benefit", claimsOfficer);
+
+        verify(notificationService).notify(eq(policyholder), contains("approved"),
+                eq("Covered under surgical benefit"), eq("/claims/1"));
     }
 }

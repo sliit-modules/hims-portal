@@ -23,9 +23,13 @@
         <input type="text" placeholder="Search policies, claims, members..." aria-label="Search"/>
     </div>
     <div class="user-chip" sec:authorize="isAuthenticated()">
-        <button class="icon-btn" type="button" title="Notifications">
-            <i class="bi bi-bell"></i><span class="dot"></span>
-        </button>
+        <a class="icon-btn position-relative" href="/notifications"
+           th:title="${unreadNotifications > 0} ? ${unreadNotifications} + ' unread notification(s)' : 'Notifications'">
+            <i class="bi bi-bell"></i>
+            <span th:if="${unreadNotifications > 0}"
+                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  style="font-size:0.6rem;" th:text="${unreadNotifications > 9} ? '9+' : ${unreadNotifications}">1</span>
+        </a>
         <div class="user-meta text-end">
             <div class="name" sec:authentication="principal.user.fullName">User</div>
             <span class="role-pill" sec:authentication="principal.user.role">ROLE</span>
