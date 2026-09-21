@@ -1,32 +1,32 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(title='Privacy Notice')}"></head>
 <body>
-<main class="container py-5" style="max-width:820px;">
+<main id="main" tabindex="-1" class="container py-5" style="max-width:820px;">
     <div class="d-flex align-items-center gap-2 mb-1">
         <i class="bi bi-shield-lock fs-3 text-primary"></i>
-        <h3 class="mb-0">MediSure HIMS Privacy Notice</h3>
+        <h1 class="h3 mb-0">MediSure HIMS Privacy Notice</h1>
     </div>
     <p class="text-muted mb-4">Version <span th:text="${noticeVersion}">2026-09</span></p>
 
-    <div class="alert alert-warning" th:if="${needsConsent}">
+    <div role="alert" class="alert alert-warning" th:if="${needsConsent}">
         <i class="bi bi-info-circle"></i>
         <strong>Please read and accept this notice to continue.</strong>
         We need your agreement before you can use the member portal.
     </div>
-    <div class="alert alert-success" th:if="${consentedAt}">
+    <div role="status" class="alert alert-success" th:if="${consentedAt}">
         <i class="bi bi-check-circle"></i>
         You accepted this notice on
         <strong th:text="${#temporals.format(consentedAt, 'MMM d, yyyy')}">date</strong>.
     </div>
 
     <div class="section-card mb-3">
-        <h6>1. Who we are</h6>
+        <h2 class="h6">1. Who we are</h2>
         <p>This notice explains how the MediSure Lanka Insurance PLC Health Insurance Management System
             (HIMS) uses your information. It follows the principles of Sri Lanka's Personal Data
             Protection Act No. 9 of 2022, which treats health information as sensitive personal data.</p>
 
-        <h6>2. What we collect</h6>
+        <h2 class="h6">2. What we collect</h2>
         <ul>
             <li><strong>Identity and contact details:</strong> NIC, full name, date of birth, gender, address, phone number and email.</li>
             <li><strong>Medical information:</strong> blood group, height, weight, allergies, chronic conditions and current medications.</li>
@@ -35,28 +35,28 @@
             <li><strong>Records of your cover:</strong> underwriting applications, policies, premium payments, claims and the documents you upload with them (such as hospital bills), and support tickets.</li>
         </ul>
 
-        <h6>3. Why we use it</h6>
+        <h2 class="h6">3. Why we use it</h2>
         <p class="mb-2">Only to provide your health cover: to assess applications, issue and renew policies,
             record premiums, process claims, answer your support requests, and keep an audit record that
             helps prevent errors and fraud. We do not use your information for marketing.</p>
 
-        <h6>4. Who can see it</h6>
+        <h2 class="h6">4. Who can see it</h2>
         <ul>
             <li>You can see only your own records.</li>
             <li>Staff see only what their role needs. Sales agents, underwriters, claims officers and administrators can open your member record. Customer relations staff cannot see your medical information.</li>
             <li>Every change to your records is recorded in an audit log with who made it and when.</li>
         </ul>
 
-        <h6>5. How we protect it</h6>
+        <h2 class="h6">5. How we protect it</h2>
         <p class="mb-2">Passwords are stored only in hashed form. Access to every page is controlled by role.
             Claim documents are stored under random file names and shown only to people allowed to see that claim.</p>
 
-        <h6>6. Family members you cover</h6>
+        <h2 class="h6">6. Family members you cover</h2>
         <p class="mb-2">When you add a family member, you confirm that you are allowed to share their details.
             A dependent aged 18 or over must agree to their own information being recorded. For a child,
             you consent as their parent or guardian.</p>
 
-        <h6>7. Your rights</h6>
+        <h2 class="h6">7. Your rights</h2>
         <ul class="mb-2">
             <li>See the information we hold about you on your profile page.</li>
             <li>Correct your personal details by editing your profile.</li>
@@ -66,7 +66,7 @@
         <p class="mb-2">We keep your records for as long as we need them to administer your cover and to meet
             our legal record-keeping duties.</p>
 
-        <h6>8. Changes to this notice</h6>
+        <h2 class="h6">8. Changes to this notice</h2>
         <p class="mb-0">If we change this notice, we will ask you to read and accept the new version the next
             time you sign in.</p>
     </div>

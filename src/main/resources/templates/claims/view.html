@@ -1,27 +1,27 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head(title='Claim Details')}"></head>
 <body>
 <div th:replace="~{fragments/layout :: navbar}"></div>
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
-    <main class="content" style="max-width:860px;">
+    <main id="main" tabindex="-1" class="content" style="max-width:860px;">
         <div class="page-header d-flex justify-content-between align-items-start">
             <div>
-                <h3 th:text="${claim.claimCode}">CLM</h3>
+                <h1 th:text="${claim.claimCode}" class="h3">CLM</h1>
                 <div class="subtitle" th:text="${claim.category.label} + ' · ' + ${claim.hospitalName}">Category</div>
             </div>
             <span class="pill"
                   th:classappend="${claim.status.name() == 'APPROVED'} ? 'pill-success' : (${claim.status.name() == 'REJECTED'} ? 'pill-danger' : (${claim.status.name() == 'WITHDRAWN' or claim.status.name() == 'VOIDED'} ? 'pill-neutral' : 'pill-warning'))"
                   th:text="${claim.status}">SUBMITTED</span>
         </div>
-        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
-        <div class="alert alert-secondary" th:if="${claim.duplicateOf != null}">
+        <div role="alert" class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+        <div role="status" class="alert alert-secondary" th:if="${claim.duplicateOf != null}">
             <i class="bi bi-files"></i> This claim was closed as a duplicate of
             <a th:href="@{'/claims/' + ${claim.duplicateOf.id}}" th:text="${claim.duplicateOf.claimCode}">CLM</a>
             and will not be paid.
         </div>
-        <div class="alert alert-warning" sec:authorize="hasAnyRole('CLAIMS_OFFICER','ADMIN')"
+        <div role="alert" class="alert alert-warning" sec:authorize="hasAnyRole('CLAIMS_OFFICER','ADMIN')"
              th:if="${possibleDuplicates != null and !#lists.isEmpty(possibleDuplicates)}">
             <i class="bi bi-exclamation-triangle"></i> <strong>Possible duplicate.</strong>
             Same policy, patient and treatment date as
@@ -31,7 +31,7 @@
         </div>
 
         <div class="section-card mb-3">
-            <h6><i class="bi bi-file-medical"></i> Claim Details</h6>
+            <h2 class="h6"><i class="bi bi-file-medical"></i> Claim Details</h2>
             <dl class="row mb-0">
                 <dt class="col-sm-4">Policy</dt><dd class="col-sm-8" th:text="${claim.policy.policyCode}"></dd>
                 <dt class="col-sm-4">Treated Member</dt>
@@ -52,10 +52,10 @@
 
         <!-- ---------------- Supporting documents ---------------- -->
         <div class="section-card mb-3">
-            <h6>
+            <h2 class="h6">
                 <i class="bi bi-paperclip"></i> Supporting Documents
                 <span class="pill pill-neutral ms-2" th:text="${#lists.size(documents)}">0</span>
-            </h6>
+            </h2>
 
             <div th:if="${#lists.isEmpty(documents)}" class="empty-state py-3">
                 <i class="bi bi-file-earmark-x"></i>No documents attached to this claim yet.
@@ -97,8 +97,8 @@
                   th:action="@{'/claims/' + ${claim.id} + '/documents'}" method="post"
                   enctype="multipart/form-data" class="row g-2 align-items-end">
                 <div class="col-md-9">
-                    <label class="form-label">Add more documents</label>
-                    <input type="file" name="documents" class="form-control" multiple required
+                    <label for="documents" class="form-label">Add more documents</label>
+                    <input id="documents" type="file" name="documents" class="form-control" multiple required
                            accept="application/pdf,image/jpeg,image/png"/>
                 </div>
                 <div class="col-md-3">
@@ -110,25 +110,25 @@
         <!-- ---------------- Officer decision ---------------- -->
         <div sec:authorize="hasAnyRole('CLAIMS_OFFICER','ADMIN')" th:if="${claim.status.name() == 'SUBMITTED'}"
              class="section-card mb-3">
-            <h6><i class="bi bi-clipboard2-check"></i> Process Claim</h6>
+            <h2 class="h6"><i class="bi bi-clipboard2-check"></i> Process Claim</h2>
             <p class="text-muted-soft" style="font-size:0.82rem;" th:if="${#lists.isEmpty(documents)}">
                 <i class="bi bi-exclamation-triangle text-warning"></i>
                 No supporting documents were attached — consider requesting them before approving.
             </p>
             <form th:action="@{'/claims/' + ${claim.id} + '/status'}" method="post" class="row g-2">
                 <div class="col-md-4">
-                    <select name="status" class="form-select" required>
+                    <select aria-label="Decision" name="status" class="form-select" required>
                         <option value="APPROVED">Approve</option>
                         <option value="REJECTED">Reject</option>
                     </select>
                 </div>
-                <div class="col-md-6"><input type="text" name="notes" class="form-control" placeholder="Decision notes (optional)"/></div>
+                <div class="col-md-6"><input aria-label="Decision notes" type="text" name="notes" class="form-control" placeholder="Decision notes (optional)"/></div>
                 <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Submit</button></div>
             </form>
 
             <div th:if="${duplicateCandidates != null and !#lists.isEmpty(duplicateCandidates)}">
                 <div class="divider"></div>
-                <h6 class="mb-1"><i class="bi bi-files"></i> Void as a Duplicate</h6>
+                <h2 class="h6 mb-1"><i class="bi bi-files"></i> Void as a Duplicate</h2>
                 <p class="text-muted-soft mb-2" style="font-size:0.82rem;">
                     Use this when the same treatment was claimed twice. The claim is kept for the record,
                     is never paid and the member is told why.

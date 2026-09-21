@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head(title='Application Details')}"></head>
 <body>
 <div th:replace="~{fragments/layout :: navbar}"></div>
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
-    <main class="content" style="max-width:700px;">
+    <main id="main" tabindex="-1" class="content" style="max-width:700px;">
         <div class="page-header">
-            <h3 th:text="${underwritingApp.applicationCode}">APP-2026-000001</h3>
+            <h1 th:text="${underwritingApp.applicationCode}" class="h3">APP-2026-000001</h1>
             <span class="pill"
                   th:classappend="${underwritingApp.decision.name() == 'APPROVED'} ? 'pill-success' : (${underwritingApp.decision.name() == 'REJECTED'} ? 'pill-danger' : (${underwritingApp.decision.name() == 'WITHDRAWN'} ? 'pill-neutral' : 'pill-warning'))"
                   th:text="${underwritingApp.decision}">PENDING</span>
         </div>
-        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+        <div role="alert" class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
         <div class="section-card mb-3">
             <dl class="row mb-0">

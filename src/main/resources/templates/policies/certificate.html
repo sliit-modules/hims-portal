@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(title='Certificate of Insurance')}"></head>
 <body>
 <style>
@@ -23,6 +23,12 @@
              padding: 6px 24px; border-radius: 12px; pointer-events: none; white-space: nowrap; }
     .foot { margin-top: 30px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: .78rem; color: #64748b; }
     .toolbar { max-width: 800px; margin: 16px auto 0; display: flex; gap: 8px; justify-content: flex-end; }
+    @media (max-width: 575px) {
+        .doc { padding: 24px 18px; margin: 12px; }
+        .doc-head { flex-direction: column; gap: 8px; }
+        .grid { grid-template-columns: 1fr; gap: 0 0; }
+        .grid dd { margin-bottom: 8px; }
+    }
     @media print {
         @page { size: A4; margin: 14mm; }
         body { background: #fff; }
@@ -31,12 +37,12 @@
     }
 </style>
 
-<div class="toolbar no-print">
+<nav class="toolbar no-print" aria-label="Page actions">
     <a th:href="@{'/policies/' + ${policy.id}}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back to policy</a>
     <button type="button" class="btn btn-primary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print / Save as PDF</button>
-</div>
+</nav>
 
-<div class="doc">
+<main class="doc" id="main">
     <div class="stamp" th:unless="${inForce}">NOT IN FORCE</div>
 
     <div class="doc-head">
@@ -66,7 +72,7 @@
         <dt>Status</dt><dd th:text="${policy.status}">ACTIVE</dd>
     </dl>
 
-    <h6 class="fw-bold mb-1">Covered members</h6>
+    <h2 class="h6 fw-bold mb-1">Covered members</h2>
     <table class="members">
         <thead><tr><th>Name</th><th>Relationship</th><th>Date of birth</th></tr></thead>
         <tbody>
@@ -87,6 +93,6 @@
         medical information. To confirm it is genuine, contact MediSure Lanka Insurance PLC quoting the
         policy number above.
     </div>
-</div>
+</main>
 </body>
 </html>

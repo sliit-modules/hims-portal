@@ -1,21 +1,21 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head(title='Underwriting Applications')}"></head>
 <body>
 <div th:replace="~{fragments/layout :: navbar}"></div>
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
-    <main class="content">
+    <main id="main" tabindex="-1" class="content">
         <div class="page-header d-flex justify-content-between align-items-end">
             <div>
-                <h3>Underwriting Applications</h3>
+                <h1 class="h3">Underwriting Applications</h1>
                 <div class="subtitle">Risk review queue from application to decision</div>
             </div>
             <a href="/underwriting/new" class="btn btn-primary" sec:authorize="hasAnyRole('POLICYHOLDER','SALES_AGENT','ADMIN')"><i class="bi bi-plus-lg"></i>New Application</a>
         </div>
         <div class="table-card">
             <table class="table table-hover">
-                <thead><tr><th>Code</th><th>Applicant</th><th>Plan</th><th>Age</th><th>Risk Score</th><th>Decision</th><th></th></tr></thead>
+                <thead><tr><th>Code</th><th>Applicant</th><th>Plan</th><th>Age</th><th>Risk Score</th><th>Decision</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
                 <tbody>
                 <tr th:each="app : ${applications}">
                     <td class="fw-semibold" th:text="${app.applicationCode}">APP</td>

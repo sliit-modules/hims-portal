@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(title='Notifications')}"></head>
 <body>
 <div th:replace="~{fragments/layout :: navbar}"></div>
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
-    <main class="content" style="max-width:780px;">
+    <main id="main" tabindex="-1" class="content" style="max-width:780px;">
         <div class="page-header d-flex justify-content-between align-items-end">
             <div>
-                <h3>Notifications</h3>
+                <h1 class="h3">Notifications</h1>
                 <div class="subtitle">Updates about your claims, policies, payments and support tickets</div>
             </div>
             <form th:if="${unreadNotifications > 0}" th:action="@{/notifications/read-all}" method="post" class="m-0">

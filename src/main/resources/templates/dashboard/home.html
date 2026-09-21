@@ -1,13 +1,26 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head(title='Dashboard')}"></head>
 <body>
 <script>
     const PALETTE = ['#2563eb', '#0d9488', '#7c3aed', '#d97706', '#0891b2', '#dc2626', '#16a34a', '#64748b'];
 
+    /**
+     * Charts are pictures to a screen reader, so each one gets a text alternative with its title and
+     * every figure it shows (WCAG 1.1.1).
+     */
+    function describe(el, labels, values) {
+        const panel = el.closest('.panel, .section-card, .card') || el.parentElement;
+        const titleEl = panel ? panel.querySelector('.panel-title') : null;
+        const title = titleEl ? titleEl.textContent.replace(/\s+/g, ' ').trim() : 'Chart';
+        const parts = labels.map(function (l, i) { return l + ' ' + values[i]; });
+        el.setAttribute('role', 'img');
+        el.setAttribute('aria-label', title + ': ' + (parts.length ? parts.join(', ') : 'no data yet'));
+    }
     function renderBar(id, labels, values, label) {
         const el = document.getElementById(id);
         if (!el) return;
+        describe(el, labels, values);
         new Chart(el, {
             type: 'bar',
             data: {
@@ -19,9 +32,9 @@
                 plugins: { legend: { display: false } },
                 scales: {
                     y: { beginAtZero: true, border: { display: false }, grid: { color: '#eef2f7' },
-                         ticks: { font: { size: 11 }, color: '#94a3b8' } },
+                         ticks: { font: { size: 11 }, color: '#5b6779' } },
                     x: { grid: { display: false }, border: { display: false },
-                         ticks: { font: { size: 11 }, color: '#94a3b8' } }
+                         ticks: { font: { size: 11 }, color: '#5b6779' } }
                 }
             }
         });
@@ -30,6 +43,7 @@
     function renderLine(id, labels, values, label) {
         const el = document.getElementById(id);
         if (!el) return;
+        describe(el, labels, values);
         const ctx = el.getContext('2d');
         const gradient = ctx.createLinearGradient(0, 0, 0, 240);
         gradient.addColorStop(0, 'rgba(37,99,235,0.28)');
@@ -49,9 +63,9 @@
                 plugins: { legend: { display: false } },
                 scales: {
                     y: { beginAtZero: true, border: { display: false }, grid: { color: '#eef2f7' },
-                         ticks: { font: { size: 11 }, color: '#94a3b8' } },
+                         ticks: { font: { size: 11 }, color: '#5b6779' } },
                     x: { grid: { display: false }, border: { display: false },
-                         ticks: { font: { size: 11 }, color: '#94a3b8' } }
+                         ticks: { font: { size: 11 }, color: '#5b6779' } }
                 }
             }
         });
@@ -60,6 +74,7 @@
     function renderDonut(id, labels, values, colors) {
         const el = document.getElementById(id);
         if (!el) return;
+        describe(el, labels, values);
         new Chart(el, {
             type: 'doughnut',
             data: {
@@ -73,7 +88,7 @@
                     legend: {
                         position: 'bottom',
                         labels: { boxWidth: 8, boxHeight: 8, usePointStyle: true, pointStyle: 'circle',
-                                  font: { size: 11 }, color: '#64748b', padding: 12 }
+                                  font: { size: 11 }, color: '#5b6779', padding: 12 }
                     }
                 }
             }
@@ -83,10 +98,10 @@
 <div th:replace="~{fragments/layout :: navbar}"></div>
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
-    <main class="content">
+    <main id="main" tabindex="-1" class="content">
         <div class="page-header d-flex justify-content-between align-items-end flex-wrap gap-2">
             <div>
-                <h3>Welcome back, <span th:text="${user.fullName}">Name</span></h3>
+                <h1 class="h3">Welcome back, <span th:text="${user.fullName}">Name</span></h1>
                 <div class="subtitle">Here is what is happening across MediSure today</div>
             </div>
             <span class="pill pill-brand" th:text="${user.role}">ROLE</span>
@@ -551,7 +566,7 @@
                 </div>
             </div>
 
-            <h6 class="fw-bold mb-2" th:if="${not #lists.isEmpty(policies)}">My Policies</h6>
+            <h2 class="h6 fw-bold mb-2" th:if="${not #lists.isEmpty(policies)}">My Policies</h2>
             <div class="row g-3 mb-3">
                 <div class="col-xl-6" th:each="p : ${policies}">
                     <div class="policy-card h-100" th:with="usedPct=${@claimService.usedPercent(p)}">

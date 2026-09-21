@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head(title='Member Profile')}"></head>
 <body>
 <div th:replace="~{fragments/layout :: navbar}"></div>
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
-    <main class="content" style="max-width:1000px;">
+    <main id="main" tabindex="-1" class="content" style="max-width:1000px;">
 
-        <div class="alert alert-success py-2" th:if="${param.saved}">
+        <div role="status" class="alert alert-success py-2" th:if="${param.saved}">
             <i class="bi bi-check-circle me-1"></i>Your profile has been updated.
         </div>
 
@@ -16,7 +16,7 @@
             <div class="avatar avatar-lg" th:classappend="'avatar-c' + ${member.avatarTone}"
                  th:text="${member.initials}">KP</div>
             <div class="grow">
-                <h3 class="mb-1" th:text="${member.fullName}">Name</h3>
+                <h1 class="h3 mb-1" th:text="${member.fullName}">Name</h1>
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="pill pill-brand" th:text="${member.role}">ROLE</span>
                     <span class="text-muted-soft" style="font-size:0.85rem;">
@@ -34,7 +34,7 @@
             <!-- Personal details -->
             <div class="col-lg-6">
                 <div class="section-card h-100">
-                    <h6><i class="bi bi-person-vcard"></i> Personal Details</h6>
+                    <h2 class="h6"><i class="bi bi-person-vcard"></i> Personal Details</h2>
                     <dl class="row mb-0">
                         <dt class="col-sm-5">NIC</dt><dd class="col-sm-7" th:text="${member.nic}">-</dd>
                         <dt class="col-sm-5">Date of Birth</dt><dd class="col-sm-7" th:text="${member.dateOfBirth}">-</dd>
@@ -54,7 +54,7 @@
             <!-- Medical information -->
             <div class="col-lg-6">
                 <div class="section-card h-100">
-                    <h6><i class="bi bi-heart-pulse"></i> Medical Information</h6>
+                    <h2 class="h6"><i class="bi bi-heart-pulse"></i> Medical Information</h2>
 
                     <div class="d-flex gap-3 mb-3">
                         <div class="metric-tile">
@@ -89,7 +89,7 @@
             <!-- Emergency contact -->
             <div class="col-lg-6">
                 <div class="section-card h-100">
-                    <h6><i class="bi bi-telephone-plus"></i> Emergency Contact</h6>
+                    <h2 class="h6"><i class="bi bi-telephone-plus"></i> Emergency Contact</h2>
                     <div th:if="${#strings.isEmpty(member.emergencyContactName)}" class="empty-state py-3">
                         <i class="bi bi-person-exclamation"></i>No emergency contact recorded.
                     </div>
@@ -105,7 +105,7 @@
             <!-- Account -->
             <div class="col-lg-6">
                 <div class="section-card h-100">
-                    <h6><i class="bi bi-shield-lock"></i> Account &amp; Access</h6>
+                    <h2 class="h6"><i class="bi bi-shield-lock"></i> Account &amp; Access</h2>
                     <dl class="row mb-0">
                         <dt class="col-sm-5">Login Username</dt>
                         <dd class="col-sm-7" th:text="${member.role.name() == 'POLICYHOLDER'} ? ${member.nic} + ' (NIC)' : ${member.email} + ' (email)'">-</dd>
@@ -131,7 +131,7 @@
 
         <!-- Policies and covered dependents -->
         <div th:if="${policies != null and not #lists.isEmpty(policies)}">
-            <h6 class="fw-bold mt-4 mb-2">Cover &amp; Covered Members</h6>
+            <h2 class="h6 fw-bold mt-4 mb-2">Cover &amp; Covered Members</h2>
             <div class="section-card mb-3" th:each="p : ${policies}">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
@@ -188,7 +188,7 @@
 
         <!-- Who has opened this member's records (shown on the member's own profile only) -->
         <div th:if="${accessHistory != null}" class="mt-4">
-            <h6 class="fw-bold mb-2">Who Has Accessed Your Records</h6>
+            <h2 class="h6 fw-bold mb-2">Who Has Accessed Your Records</h2>
             <div class="section-card">
                 <p class="text-muted-soft mb-2" style="font-size:0.82rem;">
                     Every time staff open your member record, your policy, an underwriting application, one

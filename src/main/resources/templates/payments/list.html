@@ -1,30 +1,30 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(title='Payments')}"></head>
 <body>
 <div th:replace="~{fragments/layout :: navbar}"></div>
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
-    <main class="content">
+    <main id="main" tabindex="-1" class="content">
         <div class="page-header">
-            <h3>Payments</h3>
+            <h1 class="h3">Payments</h1>
             <div class="subtitle" th:text="${pendingRefundFilter} ? 'Refund requests waiting for approval' : 'Premium payments across policies'">Premium payments across policies</div>
         </div>
 
-        <div class="alert alert-warning d-flex justify-content-between align-items-center"
+        <div role="alert" class="alert alert-warning d-flex justify-content-between align-items-center"
              th:if="${pendingRefundCount > 0 and !pendingRefundFilter}">
             <span><i class="bi bi-hourglass-split"></i>
                 <strong th:text="${pendingRefundCount}">0</strong> refund request(s) waiting for approval</span>
             <a href="/payments?refunds=pending" class="btn btn-sm btn-warning">Review requests</a>
         </div>
-        <div class="alert alert-info d-flex justify-content-between align-items-center" th:if="${pendingRefundFilter}">
+        <div role="status" class="alert alert-info d-flex justify-content-between align-items-center" th:if="${pendingRefundFilter}">
             <span><i class="bi bi-funnel"></i> Showing only refund requests waiting for approval</span>
             <a href="/payments" class="btn btn-sm btn-outline-secondary">Show all payments</a>
         </div>
 
         <div class="table-card">
             <table class="table table-hover">
-                <thead><tr><th>Policy</th><th>Amount</th><th>Method</th><th>Billing Period</th><th>Status</th><th></th></tr></thead>
+                <thead><tr><th>Policy</th><th>Amount</th><th>Method</th><th>Billing Period</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
                 <tbody>
                 <tr th:each="p : ${payments}">
                     <td class="fw-semibold" th:text="${p.policy.policyCode}">POL</td>

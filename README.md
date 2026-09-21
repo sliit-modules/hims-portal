@@ -135,6 +135,7 @@ gitGraph
 - **[Project Specification](./PROJECT_SPECIFICATION.md)**: Detailed breakdown of the 6 major functions, CRUD operations, entity models, and persona mappings.
 - **[Scrum Report (Lab 02)](./SCRUM_REPORT.md)**: Complete 4-sprint plan, 24 user stories (PBI01 to PBI24), task estimation breakdowns, and sprint goals.
 - **[Feature Documentation](./docs/features)**: Per-module notes for each of the six functional areas.
+- **[Accessibility Review](./docs/accessibility.md)**: WCAG 2.1 AA audit of 37 pages — method, before/after results and fixes (PBI33).
 - **Activity Diagrams (Lab 04)**: See `MediSure activity diagrams Lab04.pdf`, covering the UML activity diagrams for all six system processes.
 
 ---

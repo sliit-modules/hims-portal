@@ -1,18 +1,18 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(title='Pay Premium')}"></head>
 <body>
 <div th:replace="~{fragments/layout :: navbar}"></div>
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
-    <main class="content" style="max-width:600px;">
-        <h3 class="mb-3">Pay Premium — <span th:text="${policy.policyCode}"></span></h3>
+    <main id="main" tabindex="-1" class="content" style="max-width:600px;">
+        <h1 class="h3 mb-3">Pay Premium — <span th:text="${policy.policyCode}"></span></h1>
         <p class="text-muted">Due: <strong th:text="${policy.nextDueDate}"></strong> &middot; Premium: <strong th:text="${policy.premiumAmount}"></strong> (<span th:text="${policy.premiumFrequency}"></span>)</p>
-        <div class="alert alert-warning" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+        <div role="alert" class="alert alert-warning" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
         <!-- ---------------- Pay online through PayHere (shown only when it is set up) ---------------- -->
         <div class="card p-4 mb-3" th:if="${@payHereService.isAvailable()}">
-            <h6 class="mb-1"><i class="bi bi-credit-card-2-front"></i> Pay online with PayHere</h6>
+            <h2 class="h6 mb-1"><i class="bi bi-credit-card-2-front"></i> Pay online with PayHere</h2>
             <p class="text-muted-soft mb-3" style="font-size:0.85rem;">
                 Pay this premium by card on PayHere's secure page. MediSure never sees your card details, and the
                 payment is recorded as soon as PayHere confirms it.
@@ -26,22 +26,22 @@
             </form>
         </div>
 
-        <h6 class="text-muted-soft mb-2" th:if="${@payHereService.isAvailable()}">Or record a payment made another way</h6>
+        <h2 class="h6 text-muted-soft mb-2" th:if="${@payHereService.isAvailable()}">Or record a payment made another way</h2>
         <form th:action="@{/payments}" method="post" class="card p-4">
             <input type="hidden" name="policyId" th:value="${policy.id}"/>
             <div class="mb-2">
-                <label class="form-label">Amount (LKR)</label>
-                <input type="number" step="0.01" name="amount" class="form-control" th:value="${policy.premiumAmount}" required/>
+                <label for="amount" class="form-label">Amount (LKR)</label>
+                <input id="amount" type="number" step="0.01" name="amount" class="form-control" th:value="${policy.premiumAmount}" required/>
             </div>
             <div class="mb-2">
-                <label class="form-label">Payment Method</label>
-                <select name="method" class="form-select" required>
+                <label for="method" class="form-label">Payment Method</label>
+                <select id="method" name="method" class="form-select" required>
                     <option th:each="m : ${methods}" th:value="${m}" th:text="${m}"></option>
                 </select>
             </div>
             <div class="mb-3 form-check">
-                <input type="checkbox" name="autoPay" class="form-check-input" value="true"/>
-                <label class="form-check-label">Enable auto-pay for future premiums</label>
+                <input id="autoPay" type="checkbox" name="autoPay" class="form-check-input" value="true"/>
+                <label for="autoPay" class="form-check-label">Enable auto-pay for future premiums</label>
             </div>
             <button type="submit" class="btn btn-primary">Pay Now</button>
             <a th:href="@{'/policies/' + ${policy.id}}" class="btn btn-link">Cancel</a>

@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head(title='Ticket Details')}"></head>
 <body>
 <div th:replace="~{fragments/layout :: navbar}"></div>
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
-    <main class="content" style="max-width:700px;">
+    <main id="main" tabindex="-1" class="content" style="max-width:700px;">
         <div class="page-header d-flex justify-content-between align-items-start">
-            <h3 th:text="${ticket.subject}">Subject</h3>
+            <h1 th:text="${ticket.subject}" class="h3">Subject</h1>
             <span class="pill"
                   th:classappend="${ticket.status.name() == 'CLOSED'} ? 'pill-neutral' : (${ticket.status.name() == 'IN_PROGRESS'} ? 'pill-info' : 'pill-warning')"
                   th:text="${ticket.status}">OPEN</span>
@@ -28,13 +28,13 @@
         </div>
 
         <div sec:authorize="hasAnyRole('CRE','ADMIN')" th:if="${ticket.status.name() != 'CLOSED'}" class="section-card">
-            <h6><i class="bi bi-reply-fill"></i> Respond</h6>
+            <h2 class="h6"><i class="bi bi-reply-fill"></i> Respond</h2>
             <form th:action="@{'/tickets/' + ${ticket.id} + '/respond'}" method="post">
                 <div class="mb-2">
-                    <textarea name="response" class="form-control" rows="3" placeholder="Type your response..." required></textarea>
+                    <textarea aria-label="Response to the member" name="response" class="form-control" rows="3" placeholder="Type your response..." required></textarea>
                 </div>
                 <div class="mb-2">
-                    <select name="status" class="form-select">
+                    <select aria-label="Ticket status" name="status" class="form-select">
                         <option value="IN_PROGRESS">Mark In Progress</option>
                         <option value="CLOSED">Close Ticket</option>
                     </select>
