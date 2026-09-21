@@ -20,6 +20,9 @@ spring:
 
 app:
   upload-dir: target/e2e-uploads
+  encryption:
+    # Fake, test-only key. Never use it for real data.
+    key: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
 
 payhere:
   enabled: false

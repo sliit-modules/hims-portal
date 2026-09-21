@@ -62,6 +62,20 @@ A comprehensive enterprise health insurance management web application developed
    > classpath. Creating a `.env` file alone will **not** apply your credentials; the values
    > must be real environment variables, or set directly in `application.yml`.
 
+3. **Encryption key (required)**
+   - Medical information (allergies, conditions, medications, diagnoses, underwriting notes) and
+     claim documents are encrypted at rest with AES-256-GCM, so the app **will not start without a
+     key**. Generate one per machine:
+     ```bash
+     openssl rand -base64 32
+     ```
+     and put it in `application.yml` as `app.encryption.key` (or the `HIMS_FIELD_KEY` environment
+     variable).
+   - **Keep a copy in a password manager.** Without the key that encrypted the data, the medical
+     information cannot be read — not even from a database backup. Never commit it.
+   - Existing unencrypted data is encrypted automatically on the next start. See
+     [Security & Deployment](./docs/deployment.md).
+
 ---
 
 ## 🌿 Git Branching Strategy & Workflow
@@ -135,6 +149,7 @@ gitGraph
 - **[Project Specification](./PROJECT_SPECIFICATION.md)**: Detailed breakdown of the 6 major functions, CRUD operations, entity models, and persona mappings.
 - **[Scrum Report (Lab 02)](./SCRUM_REPORT.md)**: Complete 4-sprint plan, 24 user stories (PBI01 to PBI24), task estimation breakdowns, and sprint goals.
 - **[Feature Documentation](./docs/features)**: Per-module notes for each of the six functional areas.
+- **[Security & Deployment](./docs/deployment.md)**: Encryption of medical data at rest, HTTPS hosting and backups (PBI34).
 - **[Accessibility Review](./docs/accessibility.md)**: WCAG 2.1 AA audit of 37 pages — method, before/after results and fixes (PBI33).
 - **Activity Diagrams (Lab 04)**: See `MediSure activity diagrams Lab04.pdf`, covering the UML activity diagrams for all six system processes.
 

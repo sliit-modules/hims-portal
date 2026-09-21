@@ -7,7 +7,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.mock.web.MockMultipartFile;
+import com.medisure.hims.service.ClaimDocumentService;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -23,6 +26,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -56,6 +60,9 @@ class EndToEndFlowTest {
     @Autowired private ClaimRepository claims;
     @Autowired private SupportTicketRepository tickets;
     @Autowired private NotificationRepository notifications;
+    @Autowired private ClaimDocumentRepository documents;
+    @Autowired private ClaimDocumentService documentService;
+    @Autowired private JdbcTemplate jdbc;
 
     // ------------------------------------------------------------------ helpers
 
@@ -322,6 +329,48 @@ class EndToEndFlowTest {
         assertTrue(answered.getResponse().contains(policy.getNextDueDate().toString()));
         assertTrue(notifications.findAll().stream().anyMatch(n -> n.getRecipient().getId().equals(member.getId())
                 && n.getTitle().contains("Reply to your ticket")), "the member is notified of the reply");
+    }
+
+    // ------------------------------------------------------------------ encryption at rest [PBI34]
+
+    @Test
+    @DisplayName("Encryption at rest: the diagnosis and the claim document are unreadable in the database and on disk, but readable in the app")
+    void medicalDataIsEncryptedAtRest() throws Exception {
+        User member = registerMember();
+        Policy policy = issuedPolicyFor(member, activePlan(PlanType.INDIVIDUAL), "0");
+        MockHttpSession memberSession = login(member.getNic());
+        byte[] bill = "PNG-bytes: Asiri hospital bill, dengue ward".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+
+        mvc.perform(multipart("/claims")
+                        .file(new MockMultipartFile("documents", "bill.png", "image/png", bill))
+                        .session(memberSession).with(csrf())
+                        .param("policyId", policy.getId().toString())
+                        .param("category", "HOSPITALIZATION")
+                        .param("hospitalName", "Asiri Central")
+                        .param("treatmentDate", LocalDate.now().toString())
+                        .param("diagnosisSummary", "Dengue haemorrhagic fever")
+                        .param("amountClaimed", "25000.00"))
+                .andExpect(status().is3xxRedirection());
+        Claim claim = claimsOn(policy).get(0);
+
+        // In the database: ciphertext only.
+        String stored = jdbc.queryForObject("SELECT diagnosis_summary FROM claims WHERE id = ?", String.class, claim.getId());
+        assertTrue(stored.startsWith("enc:v1:"), "diagnosis is stored encrypted");
+        assertFalse(stored.contains("Dengue"));
+
+        // On disk: ciphertext only.
+        ClaimDocument document = documents.findAll().stream()
+                .filter(d -> d.getClaim().getId().equals(claim.getId())).findFirst().orElseThrow();
+        byte[] onDisk = java.nio.file.Files.readAllBytes(documentService.pathOf(document));
+        assertFalse(new String(onDisk, java.nio.charset.StandardCharsets.ISO_8859_1).contains("hospital bill"));
+
+        // In the app: the member reads their own diagnosis and downloads the original file.
+        assertEquals("Dengue haemorrhagic fever", claims.findById(claim.getId()).orElseThrow().getDiagnosisSummary());
+        mvc.perform(get("/claims/" + claim.getId()).session(memberSession))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Dengue haemorrhagic fever")));
+        mvc.perform(get("/claims/" + claim.getId() + "/documents/" + document.getId()).session(memberSession))
+                .andExpect(status().isOk())
+                .andExpect(content().bytes(bill));
     }
 
     // ------------------------------------------------------------------ security
