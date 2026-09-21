@@ -32,6 +32,9 @@ class UnderwritingServiceTest {
     @Mock
     private AuditService auditService;
 
+    @Mock
+    private NotificationService notificationService;
+
     @InjectMocks
     private UnderwritingService underwritingService;
 

@@ -26,6 +26,9 @@ class TicketServiceTest {
     @Mock
     private AuditService auditService;
 
+    @Mock
+    private NotificationService notificationService;
+
     @InjectMocks
     private TicketService ticketService;
 
@@ -119,5 +122,18 @@ class TicketServiceTest {
         assertThrows(AccessDeniedException.class, () -> ticketService.assertVisible(testTicket, otherMember));
         assertDoesNotThrow(() -> ticketService.assertVisible(testTicket, member));
         assertDoesNotThrow(() -> ticketService.assertVisible(testTicket, testExecutive));
+    }
+
+    @Test
+    @DisplayName("Replying to a ticket notifies the member who raised it")
+    void replyNotifiesTheMember() {
+        testTicket.setRaisedBy(member);
+        when(ticketRepository.findById(1L)).thenReturn(Optional.of(testTicket));
+        when(ticketRepository.save(any(SupportTicket.class))).thenReturn(testTicket);
+
+        ticketService.respond(1L, "We have updated your address", TicketStatus.IN_PROGRESS, testExecutive);
+
+        verify(notificationService).notify(eq(member), contains("Reply to your ticket"),
+                eq("We have updated your address"), eq("/tickets/1"));
     }
 }

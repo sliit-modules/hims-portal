@@ -23,13 +23,16 @@ public class PolicyService {
     private final DependentRepository dependentRepository;
     private final CodeGenerator codeGenerator;
     private final AuditService auditService;
+    private final NotificationService notificationService;
 
     public PolicyService(PolicyRepository policyRepository, DependentRepository dependentRepository,
-                          CodeGenerator codeGenerator, AuditService auditService) {
+                          CodeGenerator codeGenerator, AuditService auditService,
+                          NotificationService notificationService) {
         this.policyRepository = policyRepository;
         this.dependentRepository = dependentRepository;
         this.codeGenerator = codeGenerator;
         this.auditService = auditService;
+        this.notificationService = notificationService;
     }
 
     public List<Policy> findAllFor(User currentUser) {
@@ -82,6 +85,10 @@ public class PolicyService {
 
         Policy saved = policyRepository.save(policy);
         auditService.log("Policy", saved.getId(), "ISSUED", actor, saved.getPolicyCode());
+        notificationService.notify(saved.getPolicyholder(), "Your policy " + saved.getPolicyCode() + " is now active",
+                saved.getPlan().getPlanName() + " · first premium of LKR " + saved.getPremiumAmount()
+                        + " is due on " + saved.getNextDueDate(),
+                "/policies/" + saved.getId());
         return saved;
     }
 
