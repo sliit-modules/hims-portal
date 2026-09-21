@@ -4,19 +4,19 @@
     --brand-light: #eff6ff;
     --teal: #0d9488;
     --ink: #0f172a;
-    --success: #16a34a;
+    --success: #15803d;
     --success-light: #f0fdf4;
-    --warning: #d97706;
+    --warning: #b45309;
     --warning-light: #fffbeb;
-    --danger: #dc2626;
+    --danger: #b91c1c;
     --danger-light: #fef2f2;
-    --info: #0891b2;
+    --info: #0e7490;
     --info-light: #ecfeff;
     --violet: #7c3aed;
     --violet-light: #f5f3ff;
     --slate-900: #0f172a;
     --slate-700: #334155;
-    --slate-500: #64748b;
+    --slate-500: #5b6779;
     --slate-400: #94a3b8;
     --slate-300: #cbd5e1;
     --slate-200: #e2e8f0;
@@ -109,7 +109,7 @@ a { text-decoration: none; }
 }
 .side-section-label {
     font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
-    color: var(--slate-400); padding: 0.75rem 0.75rem 0.35rem;
+    color: var(--slate-500); padding: 0.75rem 0.75rem 0.35rem;
 }
 .side-link {
     display: flex; align-items: center; gap: 0.7rem;
@@ -122,10 +122,10 @@ a { text-decoration: none; }
 .side-link.active { background: var(--brand); color: #fff; font-weight: 600; box-shadow: 0 6px 14px -6px rgba(37,99,235,.7); }
 .side-link.active i { color: #fff; }
 
-main.content { padding: 1.75rem; width: 100%; max-width: 1360px; margin: 0 auto; }
+main.content { padding: 1.75rem; width: 100%; max-width: 1360px; margin: 0 auto; min-width: 0; }
 
 .page-header { margin-bottom: 1.4rem; }
-.page-header h3 { margin-bottom: 0.15rem; font-size: 1.4rem; }
+.page-header h1 { margin-bottom: 0.15rem; font-size: 1.4rem; }
 .page-header .subtitle { color: var(--slate-500); font-size: 0.86rem; }
 
 /* ---------- Panels ---------- */
@@ -138,10 +138,10 @@ main.content { padding: 1.75rem; width: 100%; max-width: 1360px; margin: 0 auto;
     display: flex; align-items: center; justify-content: space-between;
     font-weight: 700; font-size: 0.95rem; margin-bottom: 1.1rem;
 }
-.panel-title .sub { font-size: 0.75rem; font-weight: 500; color: var(--slate-400); }
+.panel-title .sub { font-size: 0.75rem; font-weight: 500; color: var(--slate-500); }
 .section-card { background: #fff; border: 1px solid var(--slate-200); border-radius: var(--radius); padding: 1.25rem 1.35rem; }
-.section-card h6 { font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; }
-.section-card h6 i { color: var(--brand); }
+.section-card h2 { font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem; }
+.section-card h2 i { color: var(--brand); }
 
 /* ---------- Hero stat card ---------- */
 .hero-card {
@@ -241,7 +241,7 @@ main.content { padding: 1.75rem; width: 100%; max-width: 1360px; margin: 0 auto;
 .table-title { padding: 0.9rem 0.9rem 0.25rem; font-weight: 700; font-size: 0.95rem; }
 .table-title small { display: block; font-weight: 400; font-size: 0.78rem; color: var(--slate-500); }
 .table tbody tr:hover { background: var(--slate-50); }
-.table-card { background: #fff; border: 1px solid var(--slate-200); border-radius: var(--radius); overflow: hidden; }
+.table-card { background: #fff; border: 1px solid var(--slate-200); border-radius: var(--radius); overflow: hidden; overflow-x: auto; position: relative; }
 .table-card .table { margin-bottom: 0; }
 
 /* ---------- Pills ---------- */
@@ -328,7 +328,60 @@ main.content { padding: 1.75rem; width: 100%; max-width: 1360px; margin: 0 auto;
 .chart-box { position: relative; height: 268px; width: 100%; }
 
 @media (max-width: 991px) {
-    .sidebar { display: none; }
+    /* The menu becomes a strip under the top bar instead of disappearing, so small screens and
+       200% zoom keep the same navigation (WCAG 1.4.10 reflow). */
+    .d-flex:has(> .sidebar) { flex-direction: column; }
+    .sidebar {
+        width: 100%; height: auto; align-self: stretch; display: flex; gap: 0.35rem;
+        overflow-x: auto; padding: 0.5rem 0.75rem; border-right: 0; border-bottom: 1px solid var(--slate-200);
+        top: 68px; z-index: 15;
+    }
+    .side-section-label { display: none; }
+    .side-link { flex: none; margin: 0; white-space: nowrap; padding: 0.5rem 0.7rem; }
     main.content { padding: 1.15rem; }
     .topbar-search { display: none; }
+}
+@media (max-width: 575px) {
+    .topbar { padding: 0 0.75rem; gap: 0.5rem; }
+    .d-flex:has(> .metric-tile) { flex-wrap: wrap; }
+    .table-card .table th, .table-card .table td, .table-responsive .table th, .table-responsive .table td { white-space: nowrap; }
+    .user-meta { display: none; }
+}
+@media (max-width: 400px) {
+    /* Hidden visually only, so the logo link keeps its name for screen readers. */
+    .brand-mark .brand-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .user-chip { gap: 0.4rem; }
+}
+
+/* ---------- Accessibility (WCAG 2.1 AA) ---------- */
+/* Colours are chosen so text keeps at least 4.5:1 contrast with its background (1.4.3). */
+.btn-outline-secondary { --bs-btn-color: #5c636a; --bs-btn-border-color: #5c636a; }
+.btn-outline-primary { --bs-btn-color: #0a58ca; --bs-btn-border-color: #0a58ca; }
+.btn-outline-danger { --bs-btn-color: #b02a37; --bs-btn-border-color: #b02a37; }
+.btn-outline-success { --bs-btn-color: #146c43; --bs-btn-border-color: #146c43; }
+.btn-outline-warning { --bs-btn-color: #8a5a00; --bs-btn-border-color: #b58300; --bs-btn-hover-color: #000; }
+.btn-outline-info { --bs-btn-color: #087990; --bs-btn-border-color: #087990; --bs-btn-hover-color: #fff; --bs-btn-hover-bg: #087990; }
+.nav-tabs .nav-link { color: #0a58ca; }
+.nav-tabs .nav-link.active { color: var(--slate-900); }
+.text-danger { color: #b02a37 !important; }
+.text-success { color: #146c43 !important; }
+.text-warning { color: #997404 !important; }
+
+/* A keyboard user can always see where they are (2.4.7). */
+a:focus-visible, button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible,
+textarea:focus-visible, .side-link:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid var(--brand); outline-offset: 2px; box-shadow: none;
+}
+main:focus { outline: none; }
+
+/* Hidden until focused, so keyboard users can jump past the menu (2.4.1). */
+.skip-link {
+    position: absolute; left: 12px; top: -48px; z-index: 2000; padding: 0.55rem 0.9rem;
+    background: var(--slate-900); color: #fff; border-radius: 8px; font-weight: 600; text-decoration: none;
+    transition: top 0.15s;
+}
+.skip-link:focus { top: 10px; color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; }
 }

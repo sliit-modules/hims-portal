@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <!--/* Shared error page for every module, used instead of Spring Boot's default error page. */-->
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(title='Something went wrong')}"></head>
 <body>
-<main class="container d-flex align-items-center justify-content-center" style="min-height:100vh;">
+<main id="main" tabindex="-1" class="container d-flex align-items-center justify-content-center" style="min-height:100vh;">
     <div class="section-card text-center p-5" style="max-width:520px;" th:with="code=${status ?: 500}">
         <div class="display-4 fw-bold text-primary" th:text="${code}">500</div>
         <h4 class="mt-2" th:switch="${code}">

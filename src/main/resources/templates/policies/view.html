@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:replace="~{fragments/layout :: head(title='Policy Details')}"></head>
 <body>
 <div th:replace="~{fragments/layout :: navbar}"></div>
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
-    <main class="content" style="max-width:900px;">
+    <main id="main" tabindex="-1" class="content" style="max-width:900px;">
         <div class="page-header d-flex justify-content-between align-items-start">
-            <h3 th:text="${policy.policyCode}">POL</h3>
+            <h1 th:text="${policy.policyCode}" class="h3">POL</h1>
             <div class="d-flex align-items-center gap-2">
                 <a th:href="@{'/policies/' + ${policy.id} + '/certificate'}" target="_blank" class="btn btn-sm btn-outline-secondary">
                     <i class="bi bi-printer"></i> Print certificate</a>
@@ -16,12 +16,12 @@
                       th:text="${policy.status}">ACTIVE</span>
             </div>
         </div>
-        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+        <div role="alert" class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
         <div class="row g-3 mb-3">
             <div class="col-md-8">
                 <div class="section-card h-100">
-                    <h6><i class="bi bi-file-earmark-text"></i> Policy Details</h6>
+                    <h2 class="h6"><i class="bi bi-file-earmark-text"></i> Policy Details</h2>
                     <dl class="row mb-0">
                         <dt class="col-sm-4">Policyholder</dt>
                         <dd class="col-sm-8">
@@ -39,7 +39,7 @@
             </div>
             <div class="col-md-4">
                 <div class="section-card h-100" th:with="usedPct=${@claimService.usedPercent(policy)}">
-                    <h6><i class="bi bi-shield-check"></i> Coverage Usage</h6>
+                    <h2 class="h6"><i class="bi bi-shield-check"></i> Coverage Usage</h2>
                     <div class="d-flex justify-content-between" style="font-size:0.8rem;">
                         <span class="text-muted-soft">Used</span>
                         <span class="fw-semibold" th:text="${#numbers.formatDecimal(usedPct,1,1)} + '%'">0%</span>
@@ -62,10 +62,10 @@
         </div>
 
         <div class="section-card mb-3">
-            <h6>
+            <h2 class="h6">
                 <i class="bi bi-people"></i> Covered Dependents
                 <span class="pill pill-neutral ms-2" th:text="${#lists.size(policy.dependents)}">0</span>
-            </h6>
+            </h2>
             <div th:if="${#lists.isEmpty(policy.dependents)}" class="text-muted-soft" style="font-size:0.85rem;">
                 No dependents added — the policyholder is the only covered member.
             </div>
@@ -107,50 +107,50 @@
         </div>
 
         <div th:if="${policy.plan.planType.name() == 'FAMILY'}" sec:authorize="hasAnyRole('SALES_AGENT','ADMIN')" class="section-card mb-3">
-            <h6><i class="bi bi-person-plus"></i> Add Dependent</h6>
+            <h2 class="h6"><i class="bi bi-person-plus"></i> Add Dependent</h2>
             <form th:action="@{'/policies/' + ${policy.id} + '/dependents'}" method="post" class="row g-2">
                 <div class="col-md-4">
-                    <label class="form-label">Full Name</label>
-                    <input type="text" name="fullName" class="form-control" required/>
+                    <label for="fullName" class="form-label">Full Name</label>
+                    <input id="fullName" type="text" name="fullName" class="form-control" required/>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">NIC <span class="text-muted-soft">(required from age 18)</span></label>
-                    <input type="text" name="nic" class="form-control" maxlength="12" pattern="\d{12}"
+                    <label for="nic" class="form-label">NIC <span class="text-muted-soft">(required from age 18)</span></label>
+                    <input id="nic" type="text" name="nic" class="form-control" maxlength="12" pattern="\d{12}"
                            placeholder="200412345678"/>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label">Date of Birth</label>
-                    <input type="date" name="dateOfBirth" class="form-control" required/>
+                    <label for="dateOfBirth" class="form-label">Date of Birth</label>
+                    <input id="dateOfBirth" type="date" name="dateOfBirth" class="form-control" required/>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Gender</label>
-                    <select name="gender" class="form-select" required>
+                    <label for="gender" class="form-label">Gender</label>
+                    <select id="gender" name="gender" class="form-select" required>
                         <option th:each="g : ${T(com.medisure.hims.model.Gender).values()}" th:value="${g}" th:text="${g}"></option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Relationship</label>
-                    <select name="relationship" class="form-select" required>
+                    <label for="relationship" class="form-label">Relationship</label>
+                    <select id="relationship" name="relationship" class="form-select" required>
                         <option th:each="r : ${T(com.medisure.hims.model.RelationshipType).values()}" th:value="${r}" th:text="${r}"></option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Blood Group</label>
-                    <select name="bloodGroup" class="form-select" required>
+                    <label for="bloodGroup" class="form-label">Blood Group</label>
+                    <select id="bloodGroup" name="bloodGroup" class="form-select" required>
                         <option th:each="b : ${T(com.medisure.hims.model.BloodGroup).values()}" th:value="${b}" th:text="${b.label}"></option>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label">Allergies</label>
-                    <input type="text" name="allergies" class="form-control" placeholder="None"/>
+                    <label for="allergies" class="form-label">Allergies</label>
+                    <input id="allergies" type="text" name="allergies" class="form-control" placeholder="None"/>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Chronic Conditions</label>
-                    <input type="text" name="chronicConditions" class="form-control" placeholder="None"/>
+                    <label for="chronicConditions" class="form-label">Chronic Conditions</label>
+                    <input id="chronicConditions" type="text" name="chronicConditions" class="form-control" placeholder="None"/>
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label">Current Medications</label>
-                    <input type="text" name="currentMedications" class="form-control" placeholder="None"/>
+                    <label for="currentMedications" class="form-label">Current Medications</label>
+                    <input id="currentMedications" type="text" name="currentMedications" class="form-control" placeholder="None"/>
                 </div>
                 <div class="col-12">
                     <div class="form-check">
@@ -169,9 +169,10 @@
         </div>
 
         <div class="section-card mb-3">
-            <h6><i class="bi bi-hospital"></i> Claims</h6>
+            <h2 class="h6"><i class="bi bi-hospital"></i> Claims</h2>
+            <div class="table-responsive position-relative">
             <table class="table table-sm mb-0">
-                <thead><tr><th>Code</th><th>Hospital</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+                <thead><tr><th>Code</th><th>Hospital</th><th>Amount</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
                 <tbody>
                 <tr th:each="c : ${claims}">
                     <td th:text="${c.claimCode}">CLM</td>
@@ -184,13 +185,15 @@
                 </tr>
                 </tbody>
             </table>
+            </div>
             <div th:if="${#lists.isEmpty(claims)}" class="text-muted-soft" style="font-size:0.85rem;">No claims filed yet.</div>
         </div>
 
         <div class="section-card mb-4">
-            <h6><i class="bi bi-credit-card"></i> Payments</h6>
+            <h2 class="h6"><i class="bi bi-credit-card"></i> Payments</h2>
+            <div class="table-responsive position-relative">
             <table class="table table-sm mb-0">
-                <thead><tr><th>Amount</th><th>Method</th><th>Billing Period</th><th>Status</th><th></th></tr></thead>
+                <thead><tr><th>Amount</th><th>Method</th><th>Billing Period</th><th>Status</th><th><span class="visually-hidden">Actions</span></th></tr></thead>
                 <tbody>
                 <tr th:each="p : ${payments}">
                     <td th:text="'LKR ' + ${p.amount}">0.00</td>
@@ -201,6 +204,7 @@
                 </tr>
                 </tbody>
             </table>
+            </div>
             <div th:if="${#lists.isEmpty(payments)}" class="text-muted-soft" style="font-size:0.85rem;">No payments made yet.</div>
         </div>
     </main>

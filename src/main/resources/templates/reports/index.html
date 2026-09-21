@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(title='Management Reports')}"></head>
 <body>
 <div th:replace="~{fragments/layout :: navbar}"></div>
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
-    <main class="content">
+    <main id="main" tabindex="-1" class="content">
         <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
             <div>
-                <h3>Management Reports</h3>
+                <h1 class="h3">Management Reports</h1>
                 <div class="subtitle">Premium income, claims and the claims ratio for a period</div>
             </div>
             <div class="d-flex gap-2">
@@ -21,7 +21,7 @@
             </div>
         </div>
 
-        <div class="alert alert-warning" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+        <div role="alert" class="alert alert-warning" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
         <form method="get" action="/reports" class="section-card mb-3 row g-2 align-items-end mx-0">
             <div class="col-sm-4">
@@ -72,7 +72,7 @@
         <div class="table-card mb-3">
             <div class="table-title" id="byPlan">By plan
                 <small>A claims ratio above 70% is amber; above 100% (claims cost more than the premiums earned) is red.</small></div>
-            <div class="table-responsive">
+            <div class="table-responsive" tabindex="0" role="region" aria-labelledby="byPlan">
             <table class="table table-sm" aria-labelledby="byPlan">
                 <thead><tr><th scope="col">Plan</th><th scope="col" class="text-end">In force</th><th scope="col" class="text-end">Premium income</th>
                     <th scope="col" class="text-end">Claims</th><th scope="col" class="text-end">Claimed</th><th scope="col" class="text-end">Approved</th>
@@ -108,7 +108,7 @@
 
         <div class="row g-3">
             <div class="col-lg-7">
-                <div class="table-card">
+                <div class="table-card" tabindex="0" role="region" aria-labelledby="byMonth">
                     <div class="table-title" id="byMonth">By month</div>
                     <table class="table table-sm" aria-labelledby="byMonth">
                         <thead><tr><th scope="col">Month</th><th scope="col" class="text-end">Premium income</th><th scope="col" class="text-end">Approved claims</th></tr></thead>
@@ -123,7 +123,7 @@
                 </div>
             </div>
             <div class="col-lg-5">
-                <div class="table-card">
+                <div class="table-card" tabindex="0" role="region" aria-labelledby="byStatus">
                     <div class="table-title" id="byStatus">Claims by status
                         <small>Claims submitted in the period</small></div>
                     <table class="table table-sm" aria-labelledby="byStatus">

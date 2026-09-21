@@ -1,57 +1,57 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/layout :: head(title='New Staff Account')}"></head>
 <body>
 <div th:replace="~{fragments/layout :: navbar}"></div>
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
-    <main class="content" style="max-width:600px;">
-        <h3 class="mb-3">New Staff Account</h3>
-        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+    <main id="main" tabindex="-1" class="content" style="max-width:600px;">
+        <h1 class="h3 mb-3">New Staff Account</h1>
+        <div role="alert" class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
         <form th:action="@{/users}" th:object="${user}" method="post" class="card p-4">
             <div class="mb-2">
-                <label class="form-label">NIC</label>
+                <label for="nic" class="form-label">NIC</label>
                 <input type="text" th:field="*{nic}" class="form-control" maxlength="12" required/>
             </div>
             <div class="mb-2">
-                <label class="form-label">Full Name</label>
+                <label for="fullName" class="form-label">Full Name</label>
                 <input type="text" th:field="*{fullName}" class="form-control" required/>
             </div>
             <div class="row">
                 <div class="col-6 mb-2">
-                    <label class="form-label">Date of Birth</label>
+                    <label for="dateOfBirth" class="form-label">Date of Birth</label>
                     <input type="date" th:field="*{dateOfBirth}" class="form-control" required/>
                 </div>
                 <div class="col-6 mb-2">
-                    <label class="form-label">Gender</label>
+                    <label for="gender" class="form-label">Gender</label>
                     <select th:field="*{gender}" class="form-select" required>
                         <option th:each="g : ${T(com.medisure.hims.model.Gender).values()}" th:value="${g}" th:text="${g}"></option>
                     </select>
                 </div>
             </div>
             <div class="mb-2">
-                <label class="form-label">Address</label>
+                <label for="address" class="form-label">Address</label>
                 <input type="text" th:field="*{address}" class="form-control" required/>
             </div>
             <div class="row">
                 <div class="col-6 mb-2">
-                    <label class="form-label">Phone Number</label>
+                    <label for="phoneNumber" class="form-label">Phone Number</label>
                     <input type="text" th:field="*{phoneNumber}" class="form-control" required/>
                 </div>
                 <div class="col-6 mb-2">
-                    <label class="form-label">Work Email — this will be their login</label>
+                    <label for="email" class="form-label">Work Email — this will be their login</label>
                     <input type="email" th:field="*{email}" class="form-control" required/>
                 </div>
             </div>
             <div class="mb-2">
-                <label class="form-label">Role</label>
-                <select name="role" class="form-select" required>
+                <label for="role" class="form-label">Role</label>
+                <select id="role" name="role" class="form-select" required>
                     <option th:each="r : ${roles}" th:value="${r}" th:text="${r}" th:if="${r.name() != 'POLICYHOLDER'}"></option>
                 </select>
             </div>
             <div class="mb-3">
-                <label class="form-label">Temporary Password</label>
-                <input type="password" name="password" class="form-control" required minlength="6"/>
+                <label for="password" class="form-label">Temporary Password</label>
+                <input id="password" type="password" name="password" class="form-control" required minlength="6"/>
             </div>
             <button type="submit" class="btn btn-primary">Create Account</button>
             <a href="/users" class="btn btn-link">Cancel</a>
