@@ -1,5 +1,6 @@
 package com.medisure.hims.model;
 
+import com.medisure.hims.security.EncryptedStringConverter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -86,13 +87,16 @@ public class User {
     @Max(value = 400, message = "Weight must be under 400 kg")
     private Integer weightKg;
 
-    @Column(length = 500)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(length = 1000)
     private String allergies;
 
-    @Column(length = 1000)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(length = 2000)
     private String chronicConditions;
 
-    @Column(length = 500)
+    @Convert(converter = EncryptedStringConverter.class)
+    @Column(length = 1000)
     private String currentMedications;
 
     private String emergencyContactName;
