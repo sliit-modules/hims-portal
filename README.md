@@ -200,13 +200,28 @@ Staff sign in with their **work email**; members sign in with their **NIC**.
 
 ## 🧪 Running the Tests
 
-The service layer is covered by Mockito unit tests — 111 tests across all six modules, sign-in security, audit logging, notifications, PayHere payments and management reports:
+`mvn test` runs 119 tests, and **needs no MySQL**:
 
 ```bash
 mvn test
 ```
 
-These assert the real business rules rather than just wiring: claims are rejected when they
-exceed a policy's remaining cover, only a claims officer may adjudicate, a covered dependent
-aged 18 or over must have a NIC, the underwriting loading is applied to the base premium at
-issue, and premium due dates roll forward by the correct billing frequency.
+- **111 unit tests** (Mockito) cover the service layer across all six modules, sign-in security,
+  audit logging, notifications, PayHere payments and management reports. They assert the real
+  business rules rather than just wiring: claims are rejected when they exceed a policy's remaining
+  cover, only a claims officer may adjudicate, a covered dependent aged 18 or over must have a NIC,
+  the underwriting loading is applied to the base premium at issue, and premium due dates roll
+  forward by the correct billing frequency.
+- **8 end-to-end tests** (`e2e/EndToEndFlowTest`, PBI33) start the whole application — security,
+  controllers, pages and database — and drive the six main flows over HTTP as a browser would,
+  signing in through the real login form with CSRF tokens:
+  1. the admin publishes a plan that members can see but not change;
+  2–3. a new member registers and applies, the underwriter approves with a loading, and the agent
+     issues the policy with the loaded premium (and cannot issue it twice);
+  4. the member pays, the due date moves on, and a refund needs staff approval;
+  5. an approved claim uses up cover, an over-limit claim is refused, and a duplicate is voided;
+  6. Customer Relations answers the member's ticket and the member is notified;
+  plus role-based access, CSRF protection and account lock-out.
+
+  They use an in-memory H2 database (`src/test/resources/application.yml` replaces your own
+  `application.yml` during tests), so they never touch your MySQL data, uploads or PayHere keys.
