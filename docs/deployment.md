@@ -94,4 +94,44 @@ Browser ──HTTPS──▶ Cloudflare ──encrypted tunnel──▶ cloudfla
 
 ## 3. Encrypted backups
 
-*To be added with the second half of PBI34.*
+Every night at 02:00 the host backs up the database and the claim documents to
+`~/HIMS-backups/daily/<date_time>/`, and keeps the last 14 days.
+
+| Step | How |
+|---|---|
+| Database | `mysqldump --single-transaction` (a consistent copy while the app keeps running) |
+| Documents | a `tar` of the uploads folder |
+| Compression and encryption | `gzip`, then **AES-256** with a PBKDF2-stretched backup passphrase (`openssl enc -aes-256-cbc -pbkdf2 -iter 200000`). The data streams straight into the encryption, so no unencrypted copy is ever written to disk |
+| Verification | each backup is decrypted and tested straight after it is written (the dump must end with *Dump completed*), and a `SHA256SUMS` file records its checksums |
+| Retention | backups older than 14 days are deleted |
+| Schedule | a macOS launch job (`lk.medisure.hims-backup`); a Mac that was asleep runs it on waking. Log: `~/HIMS-backups/backup.log` |
+
+**Two layers of protection.** A backup needs the **backup passphrase** to open, and even then the
+medical fields and documents inside are still encrypted with the **app key** (section 2). Both are
+kept in a password manager, away from the host, so a copied backup reveals nothing.
+
+**Restore** (tested on 21 Sep 2026 — every table matched the live database row for row):
+
+```bash
+scripts/backup/hims-restore.sh ~/HIMS-backups/daily/<date_time>            # into hims_restore_check
+scripts/backup/hims-restore.sh ~/HIMS-backups/daily/<date_time> hims_db --overwrite-live   # disaster recovery; stop the app first
+```
+
+It checks the checksums, loads the database into the target (by default a separate
+`hims_restore_check`, so the live data is never touched by accident), unpacks the documents next to
+the backup, and prints the row counts. Restoring over the live database needs `--overwrite-live`.
+
+**Setting it up on a Mac**
+
+1. Keep the claim documents outside `~/Desktop`, `~/Documents` and `~/Downloads`, which macOS hides
+   from background jobs: e.g. `app.upload-dir: /Users/<you>/HIMS-data/uploads`.
+2. Create two files that only you can read (`chmod 600`), never committed:
+   - `~/HIMS-backups/.mysql.cnf` — `[client]`, `user=…`, `password=…`
+   - `~/HIMS-backups/.backup-passphrase` — e.g. `openssl rand -base64 36`; **also save it in a
+     password manager**
+3. Run `scripts/backup/install-mac-schedule.sh` (optionally with an hour, e.g. `3`).
+4. Test it: `launchctl kickstart gui/$(id -u)/lk.medisure.hims-backup` and read the log.
+
+**Limit:** the backups are on the same machine as the database, so they protect against mistakes,
+corruption and data loss in the app, but not against losing the machine itself. Copying the (already
+encrypted) backup folder to a second place — an external drive or cloud storage — covers that.
