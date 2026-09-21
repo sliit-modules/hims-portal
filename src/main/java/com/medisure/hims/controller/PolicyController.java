@@ -2,6 +2,7 @@ package com.medisure.hims.controller;
 
 import com.medisure.hims.config.UserPrincipal;
 import com.medisure.hims.model.*;
+import com.medisure.hims.service.AuditService;
 import com.medisure.hims.service.ClaimService;
 import com.medisure.hims.service.PaymentService;
 import com.medisure.hims.service.PolicyService;
@@ -22,13 +23,16 @@ public class PolicyController {
     private final UnderwritingService underwritingService;
     private final ClaimService claimService;
     private final PaymentService paymentService;
+    private final AuditService auditService;
 
     public PolicyController(PolicyService policyService, UnderwritingService underwritingService,
-                             ClaimService claimService, PaymentService paymentService) {
+                             ClaimService claimService, PaymentService paymentService,
+                             AuditService auditService) {
         this.policyService = policyService;
         this.underwritingService = underwritingService;
         this.claimService = claimService;
         this.paymentService = paymentService;
+        this.auditService = auditService;
     }
 
     /**
@@ -73,6 +77,10 @@ public class PolicyController {
     public String view(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal, Model model) {
         Policy policy = policyService.findById(id);
         policyService.assertVisible(policy, principal.getUser());
+        // The policy page shows the policyholder's details and every dependent's medical profile.
+        auditService.logAccess(policy.getPolicyholder(), principal.getUser(), AuditService.VIEWED_POLICY,
+                "Policy " + policy.getPolicyCode() + " (policyholder and "
+                        + policy.getDependents().size() + " dependent(s))");
         model.addAttribute("policy", policy);
         model.addAttribute("claims", claimService.findAllFor(principal.getUser()).stream()
                 .filter(c -> c.getPolicy().getId().equals(id)).toList());

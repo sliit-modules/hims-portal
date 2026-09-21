@@ -3,6 +3,7 @@ package com.medisure.hims.controller;
 import com.medisure.hims.config.UserPrincipal;
 import com.medisure.hims.model.Role;
 import com.medisure.hims.model.User;
+import com.medisure.hims.service.AuditService;
 import com.medisure.hims.service.PolicyService;
 import com.medisure.hims.service.UserService;
 import jakarta.validation.Valid;
@@ -18,10 +19,12 @@ public class ProfileController {
 
     private final UserService userService;
     private final PolicyService policyService;
+    private final AuditService auditService;
 
-    public ProfileController(UserService userService, PolicyService policyService) {
+    public ProfileController(UserService userService, PolicyService policyService, AuditService auditService) {
         this.userService = userService;
         this.policyService = policyService;
+        this.auditService = auditService;
     }
 
     @GetMapping("/profile")
@@ -31,6 +34,7 @@ public class ProfileController {
         model.addAttribute("ownProfile", true);
         if (user.getRole() == Role.POLICYHOLDER) {
             model.addAttribute("policies", policyService.findAllFor(user));
+            model.addAttribute("accessHistory", auditService.accessHistoryFor(user));
         }
         return "profile/view";
     }
@@ -76,6 +80,8 @@ public class ProfileController {
         }
 
         User member = userService.findById(id);
+        auditService.logAccess(member, viewer, AuditService.VIEWED_PROFILE,
+                "Member record (personal and medical details)");
         model.addAttribute("member", member);
         model.addAttribute("ownProfile", viewer.getId().equals(id));
         model.addAttribute("policies", policyService.findAllFor(member));

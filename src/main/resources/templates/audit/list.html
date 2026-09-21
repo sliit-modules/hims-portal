@@ -8,22 +8,38 @@
     <main class="content">
         <div class="page-header">
             <h3>Audit Log</h3>
-            <div class="subtitle">Every state-changing action across the system, in order</div>
+            <div class="subtitle" th:text="${showAccess} ? 'Every time someone opened another person\'s medical or claim records' : 'Every state-changing action across the system, in order'">Every state-changing action</div>
         </div>
+
+        <ul class="nav nav-tabs mb-3">
+            <li class="nav-item">
+                <a class="nav-link" th:classappend="${showAccess} ? '' : 'active'" href="/audit">
+                    <i class="bi bi-pencil-square"></i> Changes</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" th:classappend="${showAccess} ? 'active' : ''" href="/audit?show=access">
+                    <i class="bi bi-eye"></i> Record access</a>
+            </li>
+        </ul>
+
         <div class="table-card">
             <table class="table table-sm table-hover">
-                <thead><tr><th>Timestamp</th><th>Entity</th><th>Action</th><th>Performed By</th><th>Notes</th></tr></thead>
+                <thead><tr><th>Timestamp</th><th th:text="${showAccess} ? 'Whose record' : 'Entity'">Entity</th><th>Action</th><th>Performed By</th><th>Notes</th></tr></thead>
                 <tbody>
                 <tr th:each="log : ${logs}">
                     <td class="text-muted-soft" th:text="${#temporals.format(log.timestamp, 'MMM d, HH:mm:ss')}">-</td>
-                    <td class="fw-semibold" th:text="${log.entityType} + ' #' + ${log.entityId}">-</td>
+                    <td class="fw-semibold">
+                        <a th:if="${showAccess}" th:href="@{'/members/' + ${log.entityId}}" th:text="'Member #' + ${log.entityId}">Member</a>
+                        <span th:unless="${showAccess}" th:text="${log.entityType} + ' #' + ${log.entityId}">-</span>
+                    </td>
                     <td th:text="${log.action}">-</td>
                     <td th:text="${log.performedBy != null ? log.performedBy.fullName : 'system'}">-</td>
                     <td class="text-muted-soft" th:text="${log.notes}">-</td>
                 </tr>
                 </tbody>
             </table>
-            <div th:if="${#lists.isEmpty(logs)}" class="empty-state"><i class="bi bi-clock-history"></i>No audit entries yet.</div>
+            <div th:if="${#lists.isEmpty(logs)}" class="empty-state"><i class="bi bi-clock-history"></i>
+                <span th:text="${showAccess} ? 'No one has opened another person\'s records yet.' : 'No audit entries yet.'">No audit entries yet.</span></div>
         </div>
     </main>
 </div>

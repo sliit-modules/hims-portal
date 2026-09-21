@@ -185,6 +185,30 @@
                 </div>
             </div>
         </div>
+
+        <!-- Who has opened this member's records (shown on the member's own profile only) -->
+        <div th:if="${accessHistory != null}" class="mt-4">
+            <h6 class="fw-bold mb-2">Who Has Accessed Your Records</h6>
+            <div class="section-card">
+                <p class="text-muted-soft mb-2" style="font-size:0.82rem;">
+                    Every time staff open your member record, your policy, an underwriting application, one
+                    of your claims or a claim document, it is recorded here (latest 20).
+                </p>
+                <div th:if="${#lists.isEmpty(accessHistory)}" class="text-muted-soft" style="font-size:0.85rem;">
+                    No one else has opened your records yet.
+                </div>
+                <table th:unless="${#lists.isEmpty(accessHistory)}" class="table table-sm mb-0">
+                    <thead><tr><th>When</th><th>Who</th><th>What</th></tr></thead>
+                    <tbody>
+                    <tr th:each="a : ${accessHistory}">
+                        <td class="text-nowrap" th:text="${#temporals.format(a.timestamp, 'MMM d, yyyy HH:mm')}">-</td>
+                        <td th:text="${a.performedBy != null ? a.performedBy.fullName + ' (' + a.performedBy.role + ')' : 'system'}">-</td>
+                        <td th:text="${a.notes}">-</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </main>
 </div>
 </body>
