@@ -67,6 +67,10 @@ public class Payment {
     @Column(length = 500)
     private String refundDecisionNotes;
 
+    /** PayHere's payment_id when the premium was paid online; null for payments recorded in the portal. */
+    @Column(length = 64)
+    private String gatewayReference;
+
     /** Why staff voided this payment (e.g. a duplicate entry), when its status is CANCELLED. */
     @Column(length = 500)
     private String voidReason;
