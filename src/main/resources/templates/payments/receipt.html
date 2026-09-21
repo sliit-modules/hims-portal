@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title='Payment Receipt')}"></head>
+<body>
+<style>
+    body { background: #eef1f6; }
+    .doc { max-width: 720px; margin: 24px auto; background: #fff; padding: 44px 52px; position: relative;
+           border-radius: 10px; box-shadow: 0 6px 24px rgba(15, 23, 42, .08); color: #0f172a; }
+    .doc-head { display: flex; justify-content: space-between; align-items: flex-start;
+                border-bottom: 3px solid #1d4ed8; padding-bottom: 14px; margin-bottom: 20px; }
+    .brand { font-weight: 800; font-size: 1.2rem; color: #1d4ed8; }
+    .brand small { display: block; font-weight: 500; font-size: .8rem; color: #475569; }
+    .doc h1 { font-size: 1.45rem; font-weight: 800; margin: 0 0 4px; }
+    .muted { color: #64748b; font-size: .85rem; }
+    .grid { display: grid; grid-template-columns: 170px 1fr; gap: 6px 16px; margin: 18px 0; font-size: .92rem; }
+    .grid dt { color: #475569; font-weight: 600; }
+    .grid dd { margin: 0; }
+    .total { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9;
+             border-radius: 8px; padding: 14px 18px; font-size: 1.1rem; font-weight: 800; }
+    .stamp { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%) rotate(-18deg);
+             font-size: 3.6rem; font-weight: 900; color: rgba(220, 38, 38, .18); border: 6px solid rgba(220, 38, 38, .18);
+             padding: 6px 26px; border-radius: 12px; pointer-events: none; white-space: nowrap; }
+    .foot { margin-top: 26px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: .78rem; color: #64748b; }
+    .toolbar { max-width: 720px; margin: 16px auto 0; display: flex; gap: 8px; justify-content: flex-end; }
+    @media print {
+        @page { size: A4; margin: 14mm; }
+        body { background: #fff; }
+        .no-print { display: none !important; }
+        .doc { box-shadow: none; margin: 0; padding: 0; max-width: none; }
+    }
+</style>
+
+<div class="toolbar no-print">
+    <a th:href="@{'/payments/' + ${payment.id}}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back to payment</a>
+    <button type="button" class="btn btn-primary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print / Save as PDF</button>
+</div>
+
+<div class="doc">
+    <div class="stamp" th:if="${payment.status.name() == 'REFUNDED'}">REFUNDED</div>
+    <div class="stamp" th:if="${payment.status.name() == 'CANCELLED'}">VOID</div>
+
+    <div class="doc-head">
+        <div class="brand"><i class="bi bi-shield-plus"></i> MediSure Lanka Insurance PLC
+            <small>Health Insurance Management System</small></div>
+        <div class="text-end muted">
+            Receipt No. <strong th:text="${receiptNo}">RCPT</strong><br/>
+            Printed on <span th:text="${#temporals.format(printedOn, 'd MMMM yyyy')}">date</span>
+        </div>
+    </div>
+
+    <h1>Premium Payment Receipt</h1>
+    <div class="muted">Received with thanks from the policyholder named below.</div>
+
+    <dl class="grid">
+        <dt>Received from</dt><dd th:text="${payment.policy.policyholder.fullName}">Name</dd>
+        <dt>NIC</dt><dd th:text="${payment.policy.policyholder.nic}">NIC</dd>
+        <dt>Policy</dt><dd th:text="${payment.policy.policyCode} + ' — ' + ${payment.policy.plan.planName}">Policy</dd>
+        <dt>Billing period</dt>
+        <dd th:text="${#temporals.format(payment.billingPeriodStart, 'd MMM yyyy')} + ' to ' + ${#temporals.format(payment.billingPeriodEnd, 'd MMM yyyy')}">period</dd>
+        <dt>Date paid</dt><dd th:text="${#temporals.format(payment.paidAt, 'd MMMM yyyy, HH:mm')}">date</dd>
+        <dt>Payment method</dt><dd th:text="${#strings.capitalize(#strings.toLowerCase(#strings.replace(payment.method, '_', ' ')))}">Card</dd>
+        <dt>Status</dt><dd th:text="${payment.status}">PAID</dd>
+        <dt th:if="${payment.voidReason}">Void reason</dt><dd th:if="${payment.voidReason}" th:text="${payment.voidReason}"></dd>
+    </dl>
+
+    <div class="total">
+        <span>Amount</span>
+        <span th:text="'LKR ' + ${#numbers.formatDecimal(payment.amount, 1, 'COMMA', 2, 'POINT')}">LKR 0.00</span>
+    </div>
+
+    <div class="muted mt-2" th:if="${payment.refundPending}">
+        A refund of this payment has been requested and is awaiting approval.
+    </div>
+
+    <div class="foot">
+        This is a computer-generated receipt and needs no signature. Please keep it for your records and
+        quote the receipt number in any enquiry.
+    </div>
+</div>
+</body>
+</html>

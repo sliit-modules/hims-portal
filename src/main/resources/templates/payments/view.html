@@ -6,7 +6,11 @@
 <div class="d-flex">
     <nav th:replace="~{fragments/layout :: sidebar}"></nav>
     <main class="content" style="max-width:640px;">
-        <h3 class="mb-3">Payment Receipt</h3>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0">Payment Receipt</h3>
+            <a th:href="@{'/payments/' + ${payment.id} + '/receipt'}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-printer"></i> Print receipt</a>
+        </div>
         <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
         <div class="card p-4 mb-3">
