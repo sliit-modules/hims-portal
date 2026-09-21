@@ -2,6 +2,7 @@ package com.medisure.hims.controller;
 
 import com.medisure.hims.config.UserPrincipal;
 import com.medisure.hims.model.*;
+import com.medisure.hims.service.AuditService;
 import com.medisure.hims.service.PlanService;
 import com.medisure.hims.service.UnderwritingService;
 import com.medisure.hims.service.UserService;
@@ -25,12 +26,14 @@ public class UnderwritingController {
     private final UnderwritingService underwritingService;
     private final PlanService planService;
     private final UserService userService;
+    private final AuditService auditService;
 
     public UnderwritingController(UnderwritingService underwritingService, PlanService planService,
-                                   UserService userService) {
+                                   UserService userService, AuditService auditService) {
         this.underwritingService = underwritingService;
         this.planService = planService;
         this.userService = userService;
+        this.auditService = auditService;
     }
 
     @GetMapping
@@ -74,16 +77,18 @@ public class UnderwritingController {
     public String view(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal, Model model) {
         UnderwritingApplication app = underwritingService.findById(id);
         underwritingService.assertVisible(app, principal.getUser());
+        logApplicationAccess(app, principal);
         model.addAttribute("underwritingApp", app);
         return "underwriting/view";
     }
 
     @GetMapping("/{id}/decide")
-    public String decideForm(@PathVariable Long id, Model model) {
+    public String decideForm(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal, Model model) {
         UnderwritingApplication app = underwritingService.findById(id);
         if (app.getDecision() != ApplicationDecision.PENDING) {
             return "redirect:/underwriting/" + id;
         }
+        logApplicationAccess(app, principal);
         model.addAttribute("underwritingApp", app);
         return "underwriting/decide";
     }
@@ -101,6 +106,12 @@ public class UnderwritingController {
             return "underwriting/decide";
         }
         return "redirect:/underwriting/" + id;
+    }
+
+    /** An application carries the applicant's medical conditions, so opening someone else's is recorded. */
+    private void logApplicationAccess(UnderwritingApplication app, UserPrincipal principal) {
+        auditService.logAccess(app.getApplicant(), principal.getUser(), AuditService.VIEWED_APPLICATION,
+                "Underwriting application " + app.getApplicationCode());
     }
 
     private void addFormOptions(User actor, Model model) {

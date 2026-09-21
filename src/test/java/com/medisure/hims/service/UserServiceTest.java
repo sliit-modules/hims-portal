@@ -118,6 +118,22 @@ class UserServiceTest {
         assertEquals(Role.CLAIMS_OFFICER, created.getRole());
     }
 
+    @Test
+    @DisplayName("Disabling an account records the administrator who did it, not the account itself")
+    void disableRecordsTheActingAdministrator() {
+        User member = newMember();
+        member.setId(5L);
+        User admin = new User();
+        admin.setId(1L);
+        admin.setRole(Role.ADMIN);
+        when(userRepository.findById(5L)).thenReturn(Optional.of(member));
+
+        userService.setEnabled(5L, false, admin);
+
+        assertFalse(member.isEnabled());
+        verify(auditService).log(eq("User"), eq(5L), eq("DISABLED"), eq(admin), any());
+    }
+
     // ---------------- password reset and change (PBI27) ----------------
 
     private User admin() {
