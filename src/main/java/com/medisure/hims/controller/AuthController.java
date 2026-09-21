@@ -30,7 +30,8 @@ public class AuthController {
     @InitBinder("user")
     void protectServerOwnedFields(WebDataBinder binder) {
         binder.setDisallowedFields("id", "role", "passwordHash", "enabled",
-                "privacyConsentAt", "privacyNoticeVersion");
+                "privacyConsentAt", "privacyNoticeVersion",
+                "failedLoginAttempts", "lockedUntil", "passwordChangeRequired");
     }
 
     @GetMapping("/login")
@@ -59,8 +60,9 @@ public class AuthController {
         model.addAttribute("mode", "signup");
         model.addAttribute("acceptPrivacy", acceptPrivacy);
 
-        if (password == null || password.length() < 6) {
-            bindingResult.reject("password.tooShort", "Password must be at least 6 characters");
+        if (password == null || password.length() < UserService.MIN_PASSWORD_LENGTH) {
+            bindingResult.reject("password.tooShort",
+                    "Password must be at least " + UserService.MIN_PASSWORD_LENGTH + " characters");
         } else if (!password.equals(confirmPassword)) {
             bindingResult.reject("password.mismatch", "Passwords do not match");
         }

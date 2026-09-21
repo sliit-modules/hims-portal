@@ -31,6 +31,7 @@
             <span class="role-pill" sec:authentication="principal.user.role">ROLE</span>
         </div>
         <div class="user-avatar" sec:authentication="principal.user.initials">U</div>
+        <a class="icon-btn" href="/account/password" title="Change password"><i class="bi bi-key"></i></a>
         <form th:action="@{/logout}" method="post" class="m-0">
             <button class="icon-btn" type="submit" title="Logout"><i class="bi bi-box-arrow-right"></i></button>
         </form>

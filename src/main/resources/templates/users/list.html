@@ -13,6 +13,20 @@
             </div>
             <a href="/users/new" class="btn btn-primary"><i class="bi bi-plus-lg"></i>New Staff Account</a>
         </div>
+
+        <div class="alert alert-warning" th:if="${temporaryPassword}">
+            <i class="bi bi-key"></i>
+            Temporary password for <strong th:text="${resetFor}">name</strong>:
+            <code class="fs-6 px-2" th:text="${temporaryPassword}">xxxx</code>
+            <div class="mt-1" style="font-size:0.85rem;">
+                Give it to them in person or by phone. It is shown only this once, and they must choose
+                their own password when they next sign in.
+            </div>
+        </div>
+        <div class="alert alert-success" th:if="${unlocked}">
+            <i class="bi bi-unlock"></i> <strong th:text="${unlocked}">name</strong> can sign in again.
+        </div>
+
         <div class="table-card">
             <table class="table table-hover">
                 <thead><tr><th>Login</th><th>Full Name</th><th>Role</th><th>Status</th><th></th></tr></thead>
@@ -21,8 +35,20 @@
                     <td class="fw-semibold" th:text="${u.role.name() == 'POLICYHOLDER'} ? ${u.nic} : ${u.email}">login</td>
                     <td th:text="${u.fullName}">Name</td>
                     <td><span class="pill pill-brand" th:text="${u.role}">ROLE</span></td>
-                    <td><span class="pill" th:classappend="${u.enabled} ? 'pill-success' : 'pill-danger'" th:text="${u.enabled} ? 'Enabled' : 'Disabled'">Enabled</span></td>
                     <td>
+                        <span class="pill" th:classappend="${u.enabled} ? 'pill-success' : 'pill-danger'" th:text="${u.enabled} ? 'Enabled' : 'Disabled'">Enabled</span>
+                        <span class="pill pill-warning ms-1" th:if="${u.locked}"
+                              th:text="'Locked until ' + ${#temporals.format(u.lockedUntil, 'HH:mm')}">Locked</span>
+                        <span class="pill pill-info ms-1" th:if="${u.mustChangePassword()}">Password reset pending</span>
+                    </td>
+                    <td class="text-nowrap">
+                        <form th:if="${u.locked}" th:action="@{'/users/' + ${u.id} + '/unlock'}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-warning">Unlock</button>
+                        </form>
+                        <form th:action="@{'/users/' + ${u.id} + '/reset-password'}" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                    onclick="return confirm('Reset this password? The user will get a temporary password and must choose a new one.');">Reset password</button>
+                        </form>
                         <form th:if="${u.enabled}" th:action="@{'/users/' + ${u.id} + '/disable'}" method="post" class="d-inline">
                             <button type="submit" class="btn btn-sm btn-outline-danger">Disable</button>
                         </form>
