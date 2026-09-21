@@ -178,7 +178,7 @@
                     <td th:text="${c.hospitalName}">-</td>
                     <td th:text="'LKR ' + ${c.amountClaimed}">0.00</td>
                     <td><span class="pill"
-                              th:classappend="${c.status.name() == 'APPROVED'} ? 'pill-success' : (${c.status.name() == 'REJECTED'} ? 'pill-danger' : (${c.status.name() == 'WITHDRAWN'} ? 'pill-neutral' : 'pill-warning'))"
+                              th:classappend="${c.status.name() == 'APPROVED'} ? 'pill-success' : (${c.status.name() == 'REJECTED'} ? 'pill-danger' : (${c.status.name() == 'WITHDRAWN' or c.status.name() == 'VOIDED'} ? 'pill-neutral' : 'pill-warning'))"
                               th:text="${c.status}">SUBMITTED</span></td>
                     <td><a th:href="@{'/claims/' + ${c.id}}" class="btn btn-sm btn-outline-primary">View</a></td>
                 </tr>

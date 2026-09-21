@@ -27,7 +27,7 @@
                     </td>
                     <td>
                         <span class="pill"
-                              th:classappend="${claim.status.name() == 'APPROVED'} ? 'pill-success' : (${claim.status.name() == 'REJECTED'} ? 'pill-danger' : (${claim.status.name() == 'WITHDRAWN'} ? 'pill-neutral' : 'pill-warning'))"
+                              th:classappend="${claim.status.name() == 'APPROVED'} ? 'pill-success' : (${claim.status.name() == 'REJECTED'} ? 'pill-danger' : (${claim.status.name() == 'WITHDRAWN' or claim.status.name() == 'VOIDED'} ? 'pill-neutral' : 'pill-warning'))"
                               th:text="${claim.status}">SUBMITTED</span>
                     </td>
                     <td><a th:href="@{'/claims/' + ${claim.id}}" class="btn btn-sm btn-outline-primary">View</a></td>
