@@ -95,9 +95,18 @@ public class ClaimController {
                 "Claim " + claim.getClaimCode()
                         + (claim.getClaimantDependent() != null
                                 ? " for " + claim.getClaimantDependent().getFullName() : ""));
+        populateView(model, claim);
+        return "claims/view";
+    }
+
+    /** Everything the claim page shows besides the claim: its documents and any duplicate warnings. */
+    private void populateView(Model model, Claim claim) {
         model.addAttribute("claim", claim);
         model.addAttribute("documents", documentService.findForClaim(claim));
-        return "claims/view";
+        if (claim.getStatus() == ClaimStatus.SUBMITTED) {
+            model.addAttribute("possibleDuplicates", claimService.possibleDuplicates(claim));
+            model.addAttribute("duplicateCandidates", claimService.duplicateCandidates(claim));
+        }
     }
 
     /** Adds further supporting documents to a claim that has already been filed. */
@@ -109,8 +118,7 @@ public class ClaimController {
         try {
             documentService.storeAll(claim, documents, principal.getUser());
         } catch (IllegalStateException ex) {
-            model.addAttribute("claim", claim);
-            model.addAttribute("documents", documentService.findForClaim(claim));
+            populateView(model, claim);
             model.addAttribute("errorMessage", ex.getMessage());
             return "claims/view";
         }
@@ -169,8 +177,22 @@ public class ClaimController {
             claimService.decide(id, status, notes, principal.getUser());
         } catch (IllegalStateException ex) {
             Claim claim = claimService.findById(id);
-            model.addAttribute("claim", claim);
-            model.addAttribute("documents", documentService.findForClaim(claim));
+            populateView(model, claim);
+            model.addAttribute("errorMessage", ex.getMessage());
+            return "claims/view";
+        }
+        return "redirect:/claims/" + id;
+    }
+
+    /** A claims officer closes a pending claim as a duplicate of another claim. */
+    @PostMapping("/{id}/void")
+    public String voidDuplicate(@PathVariable Long id, @RequestParam(required = false) Long originalId,
+                                 @RequestParam(required = false) String reason,
+                                 @AuthenticationPrincipal UserPrincipal principal, Model model) {
+        try {
+            claimService.voidAsDuplicate(id, originalId, reason, principal.getUser());
+        } catch (IllegalStateException ex) {
+            populateView(model, claimService.findById(id));
             model.addAttribute("errorMessage", ex.getMessage());
             return "claims/view";
         }

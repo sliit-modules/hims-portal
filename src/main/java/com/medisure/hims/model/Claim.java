@@ -70,4 +70,20 @@ public class Claim {
 
     @Column(length = 500)
     private String decisionNotes;
+
+    /** For a VOIDED claim, the claim it duplicated. */
+    @ManyToOne
+    @JoinColumn(name = "duplicate_of_id")
+    private Claim duplicateOf;
+
+    /** True when both claims are for the same treated person: the policyholder or the same dependent. */
+    public boolean samePatientAs(Claim other) {
+        if (!claimant.getId().equals(other.getClaimant().getId())) {
+            return false;
+        }
+        if (claimantDependent == null || other.getClaimantDependent() == null) {
+            return claimantDependent == null && other.getClaimantDependent() == null;
+        }
+        return claimantDependent.getId().equals(other.getClaimantDependent().getId());
+    }
 }

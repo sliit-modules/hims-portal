@@ -277,4 +277,100 @@ class ClaimServiceTest {
         verify(notificationService).notify(eq(policyholder), contains("approved"),
                 eq("Covered under surgical benefit"), eq("/claims/1"));
     }
+
+    // ------------------------------------------------------------------ duplicate claims [PBI32]
+
+    private Claim claimLike(Long id, String code, ClaimStatus status) {
+        Claim other = new Claim();
+        other.setId(id);
+        other.setClaimCode(code);
+        other.setPolicy(policy);
+        other.setClaimant(policyholder);
+        other.setTreatmentDate(LocalDate.now().minusDays(5));
+        other.setAmountClaimed(new BigDecimal("75000.00"));
+        other.setSubmittedAt(java.time.LocalDateTime.now().minusDays(4));
+        other.setStatus(status);
+        return other;
+    }
+
+    @Test
+    @DisplayName("An officer can void a pending claim as a duplicate; the member is told and it is audited")
+    void voidsDuplicateClaim() {
+        Claim original = claimLike(2L, "CLM-2026-000002", ClaimStatus.APPROVED);
+        when(claimRepository.findById(1L)).thenReturn(Optional.of(testClaim));
+        when(claimRepository.findById(2L)).thenReturn(Optional.of(original));
+        when(claimRepository.save(any(Claim.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Claim voided = claimService.voidAsDuplicate(1L, 2L, "Same hospital bill submitted twice", claimsOfficer);
+
+        assertEquals(ClaimStatus.VOIDED, voided.getStatus());
+        assertSame(original, voided.getDuplicateOf());
+        assertEquals("Same hospital bill submitted twice", voided.getDecisionNotes());
+        verify(auditService).log(eq("Claim"), eq(1L), eq("VOIDED"), eq(claimsOfficer), contains("CLM-2026-000002"));
+        verify(notificationService).notify(eq(policyholder), contains("duplicate"), any(), eq("/claims/1"));
+    }
+
+    @Test
+    @DisplayName("Only a pending claim can be voided, and a reason and an original claim are required")
+    void voidNeedsPendingClaimReasonAndOriginal() {
+        when(claimRepository.findById(1L)).thenReturn(Optional.of(testClaim));
+
+        assertThrows(IllegalStateException.class, () -> claimService.voidAsDuplicate(1L, 2L, " ", claimsOfficer));
+        assertThrows(IllegalStateException.class, () -> claimService.voidAsDuplicate(1L, null, "Twice", claimsOfficer));
+        assertThrows(IllegalStateException.class, () -> claimService.voidAsDuplicate(1L, 1L, "Twice", claimsOfficer));
+
+        testClaim.setStatus(ClaimStatus.APPROVED);
+        assertThrows(IllegalStateException.class, () -> claimService.voidAsDuplicate(1L, 2L, "Twice", claimsOfficer));
+        verify(claimRepository, never()).save(any(Claim.class));
+    }
+
+    @Test
+    @DisplayName("The original must be a live claim on the same policy for the same patient")
+    void voidRefusesUnrelatedOrClosedOriginal() {
+        when(claimRepository.findById(1L)).thenReturn(Optional.of(testClaim));
+
+        Claim otherPolicy = claimLike(2L, "CLM-2026-000002", ClaimStatus.SUBMITTED);
+        Policy another = new Policy();
+        another.setId(9L);
+        otherPolicy.setPolicy(another);
+        when(claimRepository.findById(2L)).thenReturn(Optional.of(otherPolicy));
+        assertThrows(IllegalStateException.class, () -> claimService.voidAsDuplicate(1L, 2L, "Twice", claimsOfficer));
+
+        Claim forDependent = claimLike(3L, "CLM-2026-000003", ClaimStatus.SUBMITTED);
+        Dependent child = new Dependent();
+        child.setId(7L);
+        forDependent.setClaimantDependent(child);
+        when(claimRepository.findById(3L)).thenReturn(Optional.of(forDependent));
+        assertThrows(IllegalStateException.class, () -> claimService.voidAsDuplicate(1L, 3L, "Twice", claimsOfficer));
+
+        Claim withdrawn = claimLike(4L, "CLM-2026-000004", ClaimStatus.WITHDRAWN);
+        when(claimRepository.findById(4L)).thenReturn(Optional.of(withdrawn));
+        assertThrows(IllegalStateException.class, () -> claimService.voidAsDuplicate(1L, 4L, "Twice", claimsOfficer));
+
+        verify(claimRepository, never()).save(any(Claim.class));
+    }
+
+    @Test
+    @DisplayName("A policyholder cannot void a claim")
+    void policyholderCannotVoid() {
+        assertThrows(AccessDeniedException.class,
+                () -> claimService.voidAsDuplicate(1L, 2L, "Twice", policyholder));
+        verify(claimRepository, never()).save(any(Claim.class));
+    }
+
+    @Test
+    @DisplayName("A claim for the same patient and treatment date is flagged as a possible duplicate")
+    void flagsPossibleDuplicates() {
+        testClaim.setTreatmentDate(LocalDate.now().minusDays(5));
+        testClaim.setSubmittedAt(java.time.LocalDateTime.now());
+        Claim sameDay = claimLike(2L, "CLM-2026-000002", ClaimStatus.APPROVED);
+        Claim otherDay = claimLike(3L, "CLM-2026-000003", ClaimStatus.SUBMITTED);
+        otherDay.setTreatmentDate(LocalDate.now().minusDays(40));
+        Claim withdrawnSameDay = claimLike(4L, "CLM-2026-000004", ClaimStatus.WITHDRAWN);
+        when(claimRepository.findByPolicy(policy)).thenReturn(List.of(testClaim, sameDay, otherDay, withdrawnSameDay));
+
+        assertEquals(List.of(sameDay), claimService.possibleDuplicates(testClaim));
+        // The officer can still pick any live claim for the same patient, same-day ones first.
+        assertEquals(List.of(sameDay, otherDay), claimService.duplicateCandidates(testClaim));
+    }
 }

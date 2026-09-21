@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Period;
+import java.util.Comparator;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -186,6 +187,78 @@ public class ClaimService {
         claim.setStatus(ClaimStatus.WITHDRAWN);
         claimRepository.save(claim);
         auditService.log("Claim", claim.getId(), "WITHDRAWN", actor, claim.getClaimCode());
+    }
+
+    /**
+     * Claims this one could be a duplicate of: on the same policy, for the same patient, not
+     * voided or withdrawn. Those with the same treatment date come first.
+     */
+    public List<Claim> duplicateCandidates(Claim claim) {
+        return claimRepository.findByPolicy(claim.getPolicy()).stream()
+                .filter(other -> !other.getId().equals(claim.getId()))
+                .filter(other -> other.getStatus() != ClaimStatus.VOIDED && other.getStatus() != ClaimStatus.WITHDRAWN)
+                .filter(claim::samePatientAs)
+                .sorted(Comparator.comparing((Claim other) -> !sameTreatmentDate(claim, other))
+                        .thenComparing(Claim::getSubmittedAt))
+                .toList();
+    }
+
+    /**
+     * Likely duplicates to warn the officer about: another claim on the same policy, for the same
+     * patient and the same treatment date that is still pending or already approved. This is only
+     * a warning; the officer decides whether to void.
+     */
+    public List<Claim> possibleDuplicates(Claim claim) {
+        return duplicateCandidates(claim).stream()
+                .filter(other -> sameTreatmentDate(claim, other))
+                .filter(other -> other.getStatus() == ClaimStatus.SUBMITTED || other.getStatus() == ClaimStatus.APPROVED)
+                .toList();
+    }
+
+    private boolean sameTreatmentDate(Claim a, Claim b) {
+        return a.getTreatmentDate() != null && a.getTreatmentDate().equals(b.getTreatmentDate());
+    }
+
+    /**
+     * Closes a pending claim as a duplicate of another claim for the same treatment. The claim is
+     * kept for history, is never paid and never counts against cover.
+     */
+    public Claim voidAsDuplicate(Long id, Long originalId, String reason, User actor) {
+        if (actor.getRole() != Role.CLAIMS_OFFICER && actor.getRole() != Role.ADMIN) {
+            throw new AccessDeniedException("Only a claims officer can void a claim");
+        }
+        Claim claim = findById(id);
+        if (claim.getStatus() != ClaimStatus.SUBMITTED) {
+            throw new IllegalStateException("Only a pending claim can be voided; this one is " + claim.getStatus());
+        }
+        if (originalId == null) {
+            throw new IllegalStateException("Choose the claim this one duplicates");
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalStateException("Give a reason for voiding the claim");
+        }
+        if (originalId.equals(claim.getId())) {
+            throw new IllegalStateException("A claim cannot be a duplicate of itself");
+        }
+        Claim original = findById(originalId);
+        if (!original.getPolicy().getId().equals(claim.getPolicy().getId()) || !claim.samePatientAs(original)) {
+            throw new IllegalStateException("The original claim must be on the same policy and for the same patient");
+        }
+        if (original.getStatus() == ClaimStatus.VOIDED || original.getStatus() == ClaimStatus.WITHDRAWN) {
+            throw new IllegalStateException(original.getClaimCode() + " is " + original.getStatus()
+                    + " and cannot be the original claim");
+        }
+        claim.setStatus(ClaimStatus.VOIDED);
+        claim.setDuplicateOf(original);
+        claim.setDecisionNotes(reason.trim());
+        Claim saved = claimRepository.save(claim);
+        auditService.log("Claim", saved.getId(), "VOIDED", actor,
+                "Duplicate of " + original.getClaimCode() + ": " + reason.trim());
+        notificationService.notify(saved.getClaimant(),
+                "Claim " + saved.getClaimCode() + " closed as a duplicate",
+                "It repeats claim " + original.getClaimCode() + ", which is still being handled. " + reason.trim(),
+                "/claims/" + saved.getId());
+        return saved;
     }
 
     /**
