@@ -191,10 +191,11 @@ public class UserService {
         return saved;
     }
 
-    public void setEnabled(Long id, boolean enabled) {
+    /** The audit entry names the administrator who acted, not the account that was changed. */
+    public void setEnabled(Long id, boolean enabled, User actor) {
         User user = findById(id);
         user.setEnabled(enabled);
         userRepository.save(user);
-        auditService.log("User", user.getId(), enabled ? "ENABLED" : "DISABLED", user, null);
+        auditService.log("User", user.getId(), enabled ? "ENABLED" : "DISABLED", actor, null);
     }
 }

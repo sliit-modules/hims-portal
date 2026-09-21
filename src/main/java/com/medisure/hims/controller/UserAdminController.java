@@ -64,14 +64,14 @@ public class UserAdminController {
     }
 
     @PostMapping("/{id}/disable")
-    public String disable(@PathVariable Long id) {
-        userService.setEnabled(id, false);
+    public String disable(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal) {
+        userService.setEnabled(id, false, principal.getUser());
         return "redirect:/users";
     }
 
     @PostMapping("/{id}/enable")
-    public String enable(@PathVariable Long id) {
-        userService.setEnabled(id, true);
+    public String enable(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal) {
+        userService.setEnabled(id, true, principal.getUser());
         return "redirect:/users";
     }
 
