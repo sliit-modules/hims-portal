@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title='Certificate of Insurance')}"></head>
+<body>
+<style>
+    body { background: #eef1f6; }
+    .doc { max-width: 800px; margin: 24px auto; background: #fff; padding: 48px 56px; position: relative;
+           border-radius: 10px; box-shadow: 0 6px 24px rgba(15, 23, 42, .08); color: #0f172a; }
+    .doc-head { display: flex; justify-content: space-between; align-items: flex-start;
+                border-bottom: 3px solid #1d4ed8; padding-bottom: 14px; margin-bottom: 22px; }
+    .brand { font-weight: 800; font-size: 1.25rem; color: #1d4ed8; }
+    .brand small { display: block; font-weight: 500; font-size: .8rem; color: #475569; }
+    .doc h1 { font-size: 1.5rem; font-weight: 800; margin: 0 0 4px; }
+    .muted { color: #64748b; font-size: .85rem; }
+    .grid { display: grid; grid-template-columns: 180px 1fr; gap: 6px 16px; margin: 18px 0; font-size: .92rem; }
+    .grid dt { color: #475569; font-weight: 600; }
+    .grid dd { margin: 0; }
+    table.members { width: 100%; border-collapse: collapse; font-size: .9rem; margin-top: 8px; }
+    table.members th, table.members td { border-bottom: 1px solid #e2e8f0; padding: 7px 6px; text-align: left; }
+    table.members th { background: #f1f5f9; }
+    .stamp { position: absolute; top: 42%; left: 50%; transform: translate(-50%, -50%) rotate(-18deg);
+             font-size: 3.4rem; font-weight: 900; color: rgba(220, 38, 38, .18); border: 6px solid rgba(220, 38, 38, .18);
+             padding: 6px 24px; border-radius: 12px; pointer-events: none; white-space: nowrap; }
+    .foot { margin-top: 30px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: .78rem; color: #64748b; }
+    .toolbar { max-width: 800px; margin: 16px auto 0; display: flex; gap: 8px; justify-content: flex-end; }
+    @media print {
+        @page { size: A4; margin: 14mm; }
+        body { background: #fff; }
+        .no-print { display: none !important; }
+        .doc { box-shadow: none; margin: 0; padding: 0; max-width: none; }
+    }
+</style>
+
+<div class="toolbar no-print">
+    <a th:href="@{'/policies/' + ${policy.id}}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Back to policy</a>
+    <button type="button" class="btn btn-primary btn-sm" onclick="window.print()"><i class="bi bi-printer"></i> Print / Save as PDF</button>
+</div>
+
+<div class="doc">
+    <div class="stamp" th:unless="${inForce}">NOT IN FORCE</div>
+
+    <div class="doc-head">
+        <div class="brand"><i class="bi bi-shield-plus"></i> MediSure Lanka Insurance PLC
+            <small>Health Insurance Management System</small></div>
+        <div class="text-end muted">
+            Certificate No. <strong th:text="${policy.policyCode}">POL</strong><br/>
+            Printed on <span th:text="${#temporals.format(printedOn, 'd MMMM yyyy')}">date</span>
+        </div>
+    </div>
+
+    <h1>Certificate of Health Insurance</h1>
+    <div class="muted">This certifies that the person named below is insured under the policy described.</div>
+
+    <dl class="grid">
+        <dt>Policyholder</dt><dd th:text="${policy.policyholder.fullName}">Name</dd>
+        <dt>NIC</dt><dd th:text="${policy.policyholder.nic}">NIC</dd>
+        <dt>Date of birth</dt><dd th:text="${#temporals.format(policy.policyholder.dateOfBirth, 'd MMMM yyyy')}">DOB</dd>
+        <dt>Policy number</dt><dd th:text="${policy.policyCode}">POL</dd>
+        <dt>Plan</dt><dd th:text="${policy.plan.planName} + ' (' + ${policy.plan.planType} + ')'">Plan</dd>
+        <dt>Period of cover</dt>
+        <dd th:text="${#temporals.format(policy.startDate, 'd MMM yyyy')} + ' to ' + ${#temporals.format(policy.endDate, 'd MMM yyyy')}">period</dd>
+        <dt>Annual cover limit</dt>
+        <dd th:text="'LKR ' + ${#numbers.formatDecimal(policy.plan.coverageLimit, 1, 'COMMA', 2, 'POINT')}">limit</dd>
+        <dt>Premium</dt>
+        <dd th:text="'LKR ' + ${#numbers.formatDecimal(policy.premiumAmount, 1, 'COMMA', 2, 'POINT')} + ' ' + ${#strings.toLowerCase(policy.premiumFrequency)}">premium</dd>
+        <dt>Status</dt><dd th:text="${policy.status}">ACTIVE</dd>
+    </dl>
+
+    <h6 class="fw-bold mb-1">Covered members</h6>
+    <table class="members">
+        <thead><tr><th>Name</th><th>Relationship</th><th>Date of birth</th></tr></thead>
+        <tbody>
+        <tr>
+            <td th:text="${policy.policyholder.fullName}">Name</td><td>Policyholder</td>
+            <td th:text="${#temporals.format(policy.policyholder.dateOfBirth, 'd MMM yyyy')}">DOB</td>
+        </tr>
+        <tr th:each="d : ${policy.dependents}">
+            <td th:text="${d.fullName}">Name</td>
+            <td th:text="${#strings.capitalize(#strings.toLowerCase(d.relationship))}">Relationship</td>
+            <td th:text="${#temporals.format(d.dateOfBirth, 'd MMM yyyy')}">DOB</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="foot">
+        This certificate is a summary of cover and does not replace the policy terms. It contains no
+        medical information. To confirm it is genuine, contact MediSure Lanka Insurance PLC quoting the
+        policy number above.
+    </div>
+</div>
+</body>
+</html>
