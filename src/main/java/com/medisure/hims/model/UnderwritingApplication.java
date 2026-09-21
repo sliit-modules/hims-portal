@@ -61,4 +61,11 @@ public class UnderwritingApplication {
     private LocalDateTime submittedAt = LocalDateTime.now();
 
     private LocalDateTime decidedAt;
+
+    /** The system's suggested risk score at the time of the decision, kept beside the one chosen. */
+    private Integer suggestedRiskScore;
+
+    /** Why the underwriter chose a score far from the suggestion; required for large differences. */
+    @Column(length = 500)
+    private String riskOverrideReason;
 }

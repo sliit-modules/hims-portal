@@ -3,5 +3,7 @@ package com.medisure.hims.model;
 public enum ApplicationDecision {
     PENDING,
     APPROVED,
-    REJECTED
+    REJECTED,
+    /** The applicant took the application back before it was decided. */
+    WITHDRAWN
 }
