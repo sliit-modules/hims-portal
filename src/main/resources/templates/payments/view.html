@@ -11,6 +11,9 @@
             <a th:href="@{'/payments/' + ${payment.id} + '/receipt'}" target="_blank" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-printer"></i> Print receipt</a>
         </div>
+        <div class="alert alert-success" th:if="${param.paid}">
+            <i class="bi bi-check-circle"></i> Payment received through PayHere. Thank you!
+        </div>
         <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
         <div class="card p-4 mb-3">

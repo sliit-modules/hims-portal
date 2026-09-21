@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(title='Online Payment')}"></head>
+<body>
+<div th:replace="~{fragments/layout :: navbar}"></div>
+<div class="d-flex">
+    <nav th:replace="~{fragments/layout :: sidebar}"></nav>
+    <main class="content" style="max-width:620px;">
+        <h3 class="mb-3">Online Payment</h3>
+
+        <div class="alert alert-warning" th:if="${checkout.status == 'PENDING'}">
+            <i class="bi bi-hourglass-split"></i>
+            <strong>We are waiting for PayHere to confirm your payment.</strong>
+            This usually takes a few seconds. If you completed the payment, press <em>Check again</em>.
+        </div>
+        <div class="alert alert-secondary" th:if="${checkout.status == 'CANCELLED'}">
+            The online payment was cancelled. No money was taken.
+        </div>
+        <div class="alert alert-danger" th:if="${checkout.status == 'FAILED'}">
+            PayHere could not complete the payment. No premium was recorded; please try again.
+        </div>
+
+        <div class="section-card mb-3">
+            <dl class="row mb-0">
+                <dt class="col-sm-4">Policy</dt><dd class="col-sm-8" th:text="${checkout.policy.policyCode}">POL</dd>
+                <dt class="col-sm-4">Amount</dt>
+                <dd class="col-sm-8" th:text="'LKR ' + ${#numbers.formatDecimal(checkout.amount, 1, 'COMMA', 2, 'POINT')}">LKR</dd>
+                <dt class="col-sm-4">Order ID</dt><dd class="col-sm-8" th:text="${checkout.orderId}">order</dd>
+                <dt class="col-sm-4">Status</dt><dd class="col-sm-8" th:text="${checkout.status}">PENDING</dd>
+            </dl>
+        </div>
+
+        <div class="d-flex gap-2">
+            <a th:if="${checkout.status == 'PENDING'}" class="btn btn-primary"
+               th:href="@{/payments/payhere/return(order_id=${checkout.orderId})}"><i class="bi bi-arrow-repeat"></i> Check again</a>
+            <a class="btn btn-outline-secondary" th:href="@{'/policies/' + ${checkout.policy.id}}">Back to policy</a>
+        </div>
+    </main>
+</div>
+</body>
+</html>
