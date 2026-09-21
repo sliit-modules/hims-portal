@@ -25,7 +25,7 @@
                     <td th:text="${app.riskScore ?: '-'}">-</td>
                     <td>
                         <span class="pill"
-                              th:classappend="${app.decision.name() == 'APPROVED'} ? 'pill-success' : (${app.decision.name() == 'REJECTED'} ? 'pill-danger' : 'pill-warning')"
+                              th:classappend="${app.decision.name() == 'APPROVED'} ? 'pill-success' : (${app.decision.name() == 'REJECTED'} ? 'pill-danger' : (${app.decision.name() == 'WITHDRAWN'} ? 'pill-neutral' : 'pill-warning'))"
                               th:text="${app.decision}">PENDING</span>
                     </td>
                     <td><a th:href="@{'/underwriting/' + ${app.id}}" class="btn btn-sm btn-outline-primary">View</a></td>

@@ -9,9 +9,11 @@
         <div class="page-header">
             <h3 th:text="${underwritingApp.applicationCode}">APP-2026-000001</h3>
             <span class="pill"
-                  th:classappend="${underwritingApp.decision.name() == 'APPROVED'} ? 'pill-success' : (${underwritingApp.decision.name() == 'REJECTED'} ? 'pill-danger' : 'pill-warning')"
+                  th:classappend="${underwritingApp.decision.name() == 'APPROVED'} ? 'pill-success' : (${underwritingApp.decision.name() == 'REJECTED'} ? 'pill-danger' : (${underwritingApp.decision.name() == 'WITHDRAWN'} ? 'pill-neutral' : 'pill-warning'))"
                   th:text="${underwritingApp.decision}">PENDING</span>
         </div>
+        <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
         <div class="section-card mb-3">
             <dl class="row mb-0">
                 <dt class="col-sm-4">Applicant</dt><dd class="col-sm-8" th:text="${underwritingApp.applicant.fullName} + ' (' + ${underwritingApp.applicant.nic} + ')'">Name</dd>
@@ -20,10 +22,19 @@
                 <dt class="col-sm-4">Pre-existing Conditions</dt><dd class="col-sm-8" th:text="${underwritingApp.hasPreExistingConditions} ? 'Yes' : 'No'">No</dd>
                 <dt class="col-sm-4" th:if="${underwritingApp.conditionsNotes}">Condition Notes</dt><dd class="col-sm-8" th:if="${underwritingApp.conditionsNotes}" th:text="${underwritingApp.conditionsNotes}"></dd>
                 <dt class="col-sm-4">Dependents Planned</dt><dd class="col-sm-8" th:text="${underwritingApp.numDependentsPlanned}">0</dd>
-                <dt class="col-sm-4" th:if="${underwritingApp.riskScore}">Risk Score</dt><dd class="col-sm-8" th:if="${underwritingApp.riskScore}" th:text="${underwritingApp.riskScore} + ' / 100'"></dd>
+                <dt class="col-sm-4" th:if="${underwritingApp.riskScore}">Risk Score</dt>
+                <dd class="col-sm-8" th:if="${underwritingApp.riskScore}">
+                    <span th:text="${underwritingApp.riskScore} + ' / 100'">0 / 100</span>
+                    <span class="text-muted-soft" th:if="${underwritingApp.suggestedRiskScore}"
+                          th:text="'(suggested ' + ${underwritingApp.suggestedRiskScore} + ')'">(suggested)</span>
+                </dd>
+                <dt class="col-sm-4" th:if="${underwritingApp.riskOverrideReason}">Reason for Score</dt>
+                <dd class="col-sm-8" th:if="${underwritingApp.riskOverrideReason}" th:text="${underwritingApp.riskOverrideReason}"></dd>
                 <dt class="col-sm-4" th:if="${underwritingApp.decision.name() == 'APPROVED'}">Premium Loading</dt>
                 <dd class="col-sm-8" th:if="${underwritingApp.decision.name() == 'APPROVED'}" th:text="${underwritingApp.premiumLoadingPercent} + '%'"></dd>
-                <dt class="col-sm-4">Submitted</dt><dd class="col-sm-8" th:text="${#temporals.format(application.submittedAt, 'MMM d, yyyy HH:mm')}">-</dd>
+                <dt class="col-sm-4">Submitted</dt><dd class="col-sm-8" th:text="${#temporals.format(underwritingApp.submittedAt, 'MMM d, yyyy HH:mm')}">-</dd>
+                <dt class="col-sm-4" th:if="${underwritingApp.decidedAt}" th:text="${underwritingApp.decision.name() == 'WITHDRAWN'} ? 'Withdrawn' : 'Decided'">Decided</dt>
+                <dd class="col-sm-8" th:if="${underwritingApp.decidedAt}" th:text="${#temporals.format(underwritingApp.decidedAt, 'MMM d, yyyy HH:mm')}">-</dd>
             </dl>
         </div>
 
@@ -34,6 +45,16 @@
         <div sec:authorize="hasAnyRole('SALES_AGENT','ADMIN')" th:if="${underwritingApp.decision.name() == 'APPROVED'}">
             <a th:href="@{'/policies/issue/' + ${underwritingApp.id}}" class="btn btn-primary"><i class="bi bi-file-earmark-plus"></i>Issue Policy</a>
         </div>
+
+        <!-- The applicant can take back an application that has not been decided yet. -->
+        <form sec:authorize="hasRole('POLICYHOLDER')"
+              th:if="${underwritingApp.decision.name() == 'PENDING' and #authentication.principal.user.id == underwritingApp.applicant.id}"
+              th:action="@{'/underwriting/' + ${underwritingApp.id} + '/withdraw'}" method="post">
+            <button type="submit" class="btn btn-outline-secondary"
+                    onclick="return confirm('Withdraw this application? It will not be assessed.');">
+                <i class="bi bi-arrow-counterclockwise"></i>Withdraw Application
+            </button>
+        </form>
     </main>
 </div>
 </body>
