@@ -89,6 +89,20 @@ public class PolicyController {
         return "policies/view";
     }
 
+    /** A printable certificate of insurance; the browser's print dialog can save it as a PDF. */
+    @GetMapping("/{id}/certificate")
+    public String certificate(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal, Model model) {
+        Policy policy = policyService.findById(id);
+        policyService.assertVisible(policy, principal.getUser());
+        // The certificate shows the holder's NIC and date of birth, so staff opening it is recorded.
+        auditService.logAccess(policy.getPolicyholder(), principal.getUser(), AuditService.VIEWED_POLICY,
+                "Certificate for policy " + policy.getPolicyCode());
+        model.addAttribute("policy", policy);
+        model.addAttribute("inForce", policy.getStatus() == PolicyStatus.ACTIVE || policy.getStatus() == PolicyStatus.RENEWED);
+        model.addAttribute("printedOn", LocalDate.now());
+        return "policies/certificate";
+    }
+
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
         model.addAttribute("policy", policyService.findById(id));
