@@ -236,6 +236,10 @@ main.content { padding: 1.75rem; width: 100%; max-width: 1360px; margin: 0 auto;
     font-weight: 700; border-bottom: 1px solid var(--slate-200); padding: 0.65rem 0.9rem;
 }
 .table tbody td { padding: 0.75rem 0.9rem; vertical-align: middle; border-bottom: 1px solid var(--slate-100); font-size: 0.86rem; }
+/* Row headers (first column of a report table) look like the other cells, just semibold. */
+.table tbody th { padding: 0.75rem 0.9rem; vertical-align: middle; border-bottom: 1px solid var(--slate-100); font-size: 0.86rem; font-weight: 600; }
+.table-title { padding: 0.9rem 0.9rem 0.25rem; font-weight: 700; font-size: 0.95rem; }
+.table-title small { display: block; font-weight: 400; font-size: 0.78rem; color: var(--slate-500); }
 .table tbody tr:hover { background: var(--slate-50); }
 .table-card { background: #fff; border: 1px solid var(--slate-200); border-radius: var(--radius); overflow: hidden; }
 .table-card .table { margin-bottom: 0; }

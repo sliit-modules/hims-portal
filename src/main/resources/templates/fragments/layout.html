@@ -58,6 +58,7 @@
     <a class="side-link" data-path="/tickets" href="/tickets"><i class="bi bi-headset"></i> Support Tickets</a>
 
     <div class="side-section-label" sec:authorize="hasRole('ADMIN')">Administration</div>
+    <a class="side-link" data-path="/reports" href="/reports" sec:authorize="hasRole('ADMIN')"><i class="bi bi-bar-chart-line"></i> Reports</a>
     <a class="side-link" data-path="/audit" href="/audit" sec:authorize="hasRole('ADMIN')"><i class="bi bi-clock-history"></i> Audit Log</a>
     <a class="side-link" data-path="/users" href="/users" sec:authorize="hasRole('ADMIN')"><i class="bi bi-people"></i> Manage Users</a>
 
