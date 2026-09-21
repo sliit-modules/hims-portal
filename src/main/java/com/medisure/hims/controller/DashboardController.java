@@ -141,7 +141,9 @@ public class DashboardController {
                 || p.getStatus() == PolicyStatus.RENEWED).count();
         model.addAttribute("activeRate", percent(active, policies.size()));
         long approvedApps = apps.stream().filter(a -> a.getDecision() == ApplicationDecision.APPROVED).count();
-        long decidedApps = apps.stream().filter(a -> a.getDecision() != ApplicationDecision.PENDING).count();
+        // Withdrawn applications were never decided, so they don't count towards the conversion rate.
+        long decidedApps = apps.stream().filter(a -> a.getDecision() == ApplicationDecision.APPROVED
+                || a.getDecision() == ApplicationDecision.REJECTED).count();
         model.addAttribute("conversionRate", percent(approvedApps, decidedApps));
 
         model.addAttribute("policiesByMonth", bucketByMonth(policies,

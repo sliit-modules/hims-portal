@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .requestMatchers("/plans/**").hasAnyRole("ADMIN", "SALES_AGENT", "UNDERWRITER", "POLICYHOLDER")
 
                 .requestMatchers("/underwriting/*/decide").hasAnyRole("UNDERWRITER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/underwriting/*/withdraw").hasAnyRole("POLICYHOLDER", "ADMIN")
                 .requestMatchers("/underwriting/new").hasAnyRole("POLICYHOLDER", "SALES_AGENT", "ADMIN")
                 .requestMatchers(HttpMethod.POST, "/underwriting").hasAnyRole("POLICYHOLDER", "SALES_AGENT", "ADMIN")
                 .requestMatchers("/underwriting/**").hasAnyRole("UNDERWRITER", "ADMIN", "SALES_AGENT", "POLICYHOLDER")

@@ -90,6 +90,7 @@ public class UnderwritingController {
         }
         logApplicationAccess(app, principal);
         model.addAttribute("underwritingApp", app);
+        model.addAttribute("risk", underwritingService.assessRisk(app));
         return "underwriting/decide";
     }
 
@@ -97,13 +98,34 @@ public class UnderwritingController {
     public String decide(@PathVariable Long id, @RequestParam ApplicationDecision decision,
                           @RequestParam(required = false) Integer riskScore,
                           @RequestParam(required = false) BigDecimal premiumLoadingPercent,
+                          @RequestParam(required = false) String overrideReason,
                           @AuthenticationPrincipal UserPrincipal principal, Model model) {
         try {
-            underwritingService.decide(id, decision, riskScore, premiumLoadingPercent, principal.getUser());
+            underwritingService.decide(id, decision, riskScore, premiumLoadingPercent, overrideReason,
+                    principal.getUser());
+        } catch (IllegalStateException ex) {
+            UnderwritingApplication app = underwritingService.findById(id);
+            model.addAttribute("underwritingApp", app);
+            model.addAttribute("risk", underwritingService.assessRisk(app));
+            model.addAttribute("errorMessage", ex.getMessage());
+            // Keep what the underwriter typed so they only need to fix the problem.
+            model.addAttribute("decision", decision);
+            model.addAttribute("riskScore", riskScore);
+            model.addAttribute("premiumLoadingPercent", premiumLoadingPercent);
+            model.addAttribute("overrideReason", overrideReason);
+            return "underwriting/decide";
+        }
+        return "redirect:/underwriting/" + id;
+    }
+
+    @PostMapping("/{id}/withdraw")
+    public String withdraw(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal, Model model) {
+        try {
+            underwritingService.withdraw(id, principal.getUser());
         } catch (IllegalStateException ex) {
             model.addAttribute("underwritingApp", underwritingService.findById(id));
             model.addAttribute("errorMessage", ex.getMessage());
-            return "underwriting/decide";
+            return "underwriting/view";
         }
         return "redirect:/underwriting/" + id;
     }
