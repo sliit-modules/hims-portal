@@ -205,4 +205,60 @@ class ClaimServiceTest {
         assertTrue(ex.getMessage().contains("future"));
         verify(claimRepository, never()).save(any(Claim.class));
     }
+
+    @Test
+    @DisplayName("Claims approved in an earlier policy year no longer use up this year's cover")
+    void coverResetsEachPolicyYear() {
+        policy.setStartDate(LocalDate.now().minusYears(1).minusMonths(2));   // now in its second year
+        Claim lastYear = new Claim();
+        lastYear.setAmountClaimed(new BigDecimal("1900000.00"));
+        lastYear.setTreatmentDate(LocalDate.now().minusMonths(13));
+        lastYear.setStatus(ClaimStatus.APPROVED);
+        Claim thisYear = new Claim();
+        thisYear.setAmountClaimed(new BigDecimal("150000.00"));
+        thisYear.setTreatmentDate(LocalDate.now().minusMonths(1));
+        thisYear.setStatus(ClaimStatus.APPROVED);
+        when(claimRepository.findByPolicyAndStatus(policy, ClaimStatus.APPROVED))
+                .thenReturn(List.of(lastYear, thisYear));
+
+        // 2,000,000 limit - 150,000 approved this year; last year's 1,900,000 no longer counts.
+        assertEquals(0, new BigDecimal("1850000.00").compareTo(claimService.remainingCoverage(policy)));
+    }
+
+    @Test
+    @DisplayName("A claim that has already been decided cannot be decided again")
+    void refusesSecondDecision() {
+        testClaim.setStatus(ClaimStatus.APPROVED);
+        when(claimRepository.findById(1L)).thenReturn(Optional.of(testClaim));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> claimService.decide(1L, ClaimStatus.REJECTED, "Changed my mind", claimsOfficer));
+
+        assertTrue(ex.getMessage().contains("already been decided"));
+        verify(claimRepository, never()).save(any(Claim.class));
+    }
+
+    @Test
+    @DisplayName("An officer can only approve or reject a claim, not set any other status")
+    void refusesOtherDecisionStatuses() {
+        when(claimRepository.findById(1L)).thenReturn(Optional.of(testClaim));
+
+        assertThrows(IllegalStateException.class,
+                () -> claimService.decide(1L, ClaimStatus.WITHDRAWN, "Not a decision", claimsOfficer));
+
+        verify(claimRepository, never()).save(any(Claim.class));
+    }
+
+    @Test
+    @DisplayName("A claim for treatment before the policy started is refused")
+    void refusesTreatmentBeforePolicyStart() {
+        policy.setStartDate(LocalDate.now().minusMonths(2));
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class,
+                () -> claimService.submit(policy, policyholder, null, ClaimCategory.DENTAL, "City Dental",
+                        LocalDate.now().minusMonths(3), "Filling", new BigDecimal("5000.00"), policyholder));
+
+        assertTrue(ex.getMessage().contains("before this policy's cover started"));
+        verify(claimRepository, never()).save(any(Claim.class));
+    }
 }

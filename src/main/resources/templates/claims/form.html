@@ -10,7 +10,7 @@
             <h3>File a Claim</h3>
             <div class="subtitle">
                 Policy <span th:text="${policy.policyCode}"></span> ·
-                remaining cover <strong th:text="'LKR ' + ${#numbers.formatDecimal(remainingCoverage,0,'COMMA',2,'POINT')}">0.00</strong>
+                remaining cover this policy year <strong th:text="'LKR ' + ${#numbers.formatDecimal(remainingCoverage,0,'COMMA',2,'POINT')}">0.00</strong>
             </div>
         </div>
         <div class="alert alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
