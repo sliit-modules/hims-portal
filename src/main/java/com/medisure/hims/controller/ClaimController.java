@@ -2,6 +2,7 @@ package com.medisure.hims.controller;
 
 import com.medisure.hims.config.UserPrincipal;
 import com.medisure.hims.model.*;
+import com.medisure.hims.service.AuditService;
 import com.medisure.hims.service.ClaimDocumentService;
 import com.medisure.hims.service.ClaimService;
 import com.medisure.hims.service.PolicyService;
@@ -26,12 +27,14 @@ public class ClaimController {
     private final ClaimService claimService;
     private final PolicyService policyService;
     private final ClaimDocumentService documentService;
+    private final AuditService auditService;
 
     public ClaimController(ClaimService claimService, PolicyService policyService,
-                            ClaimDocumentService documentService) {
+                            ClaimDocumentService documentService, AuditService auditService) {
         this.claimService = claimService;
         this.policyService = policyService;
         this.documentService = documentService;
+        this.auditService = auditService;
     }
 
     @GetMapping
@@ -87,6 +90,11 @@ public class ClaimController {
     public String view(@PathVariable Long id, @AuthenticationPrincipal UserPrincipal principal, Model model) {
         Claim claim = claimService.findById(id);
         claimService.assertVisible(claim, principal.getUser());
+        // The claim shows a diagnosis and blood group, so opening someone else's claim is recorded.
+        auditService.logAccess(claim.getClaimant(), principal.getUser(), AuditService.VIEWED_CLAIM,
+                "Claim " + claim.getClaimCode()
+                        + (claim.getClaimantDependent() != null
+                                ? " for " + claim.getClaimantDependent().getFullName() : ""));
         model.addAttribute("claim", claim);
         model.addAttribute("documents", documentService.findForClaim(claim));
         return "claims/view";
@@ -126,6 +134,9 @@ public class ClaimController {
         }
 
         Resource resource = documentService.loadAsResource(document);
+        auditService.logAccess(claim.getClaimant(), principal.getUser(), AuditService.VIEWED_DOCUMENT,
+                (download ? "Downloaded " : "Opened ") + document.getOriginalFileName()
+                        + " on claim " + claim.getClaimCode());
         String disposition = (download ? "attachment" : "inline")
                 + "; filename=\"" + document.getOriginalFileName().replace("\"", "") + "\"";
         return ResponseEntity.ok()

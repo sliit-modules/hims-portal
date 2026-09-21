@@ -110,7 +110,8 @@ public class DashboardController {
 
         model.addAttribute("recentClaims", claims.stream()
                 .sorted(Comparator.comparing(Claim::getSubmittedAt).reversed()).limit(5).toList());
-        model.addAttribute("recentActivity", auditLogRepository.findAllByOrderByTimestampDesc()
+        // Changes only: record views (VIEWED_*) are shown on the Audit Log's "Record access" tab.
+        model.addAttribute("recentActivity", auditLogRepository.findByActionNotLikeOrderByTimestampDesc("VIEWED_%")
                 .stream().limit(5).toList());
     }
 
