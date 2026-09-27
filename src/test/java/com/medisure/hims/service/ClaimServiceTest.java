@@ -2,12 +2,16 @@ package com.medisure.hims.service;
 
 import com.medisure.hims.model.*;
 import com.medisure.hims.repository.ClaimRepository;
+import com.medisure.hims.pattern.event.ClaimDecidedEvent;
+import com.medisure.hims.pattern.event.ClaimVoidedEvent;
+import com.medisure.hims.pattern.event.DomainEvents;
 import com.medisure.hims.util.CodeGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
@@ -35,6 +39,9 @@ class ClaimServiceTest {
 
     @Mock
     private NotificationService notificationService;
+
+    @Mock
+    private DomainEvents domainEvents;
 
     @InjectMocks
     private ClaimService claimService;
@@ -92,7 +99,10 @@ class ClaimServiceTest {
 
         assertEquals(ClaimStatus.APPROVED, decided.getStatus());
         assertEquals("Covered under surgical benefit", decided.getDecisionNotes());
-        verify(auditService).log(eq("Claim"), eq(1L), eq("DECIDED:APPROVED"), eq(claimsOfficer), any());
+        ArgumentCaptor<ClaimDecidedEvent> event = ArgumentCaptor.forClass(ClaimDecidedEvent.class);
+        verify(domainEvents).publish(event.capture());
+        assertEquals("DECIDED:APPROVED", event.getValue().auditAction());
+        assertSame(claimsOfficer, event.getValue().actor());
     }
 
     @Test
@@ -105,7 +115,9 @@ class ClaimServiceTest {
                 "Exceeds annual outpatient limit", claimsOfficer);
 
         assertEquals(ClaimStatus.REJECTED, decided.getStatus());
-        verify(auditService).log(eq("Claim"), eq(1L), eq("DECIDED:REJECTED"), eq(claimsOfficer), any());
+        ArgumentCaptor<ClaimDecidedEvent> event = ArgumentCaptor.forClass(ClaimDecidedEvent.class);
+        verify(domainEvents).publish(event.capture());
+        assertEquals("DECIDED:REJECTED", event.getValue().auditAction());
     }
 
     @Test
@@ -274,8 +286,12 @@ class ClaimServiceTest {
 
         claimService.decide(1L, ClaimStatus.APPROVED, "Covered under surgical benefit", claimsOfficer);
 
-        verify(notificationService).notify(eq(policyholder), contains("approved"),
-                eq("Covered under surgical benefit"), eq("/claims/1"));
+        ArgumentCaptor<ClaimDecidedEvent> event = ArgumentCaptor.forClass(ClaimDecidedEvent.class);
+        verify(domainEvents).publish(event.capture());
+        assertSame(policyholder, event.getValue().recipient());
+        assertTrue(event.getValue().notificationTitle().contains("approved"));
+        assertEquals("Covered under surgical benefit", event.getValue().notificationBody());
+        assertEquals("/claims/1", event.getValue().link());
     }
 
     // ------------------------------------------------------------------ duplicate claims [PBI32]
@@ -306,8 +322,13 @@ class ClaimServiceTest {
         assertEquals(ClaimStatus.VOIDED, voided.getStatus());
         assertSame(original, voided.getDuplicateOf());
         assertEquals("Same hospital bill submitted twice", voided.getDecisionNotes());
-        verify(auditService).log(eq("Claim"), eq(1L), eq("VOIDED"), eq(claimsOfficer), contains("CLM-2026-000002"));
-        verify(notificationService).notify(eq(policyholder), contains("duplicate"), any(), eq("/claims/1"));
+        ArgumentCaptor<ClaimVoidedEvent> event = ArgumentCaptor.forClass(ClaimVoidedEvent.class);
+        verify(domainEvents).publish(event.capture());
+        assertEquals("VOIDED", event.getValue().auditAction());
+        assertTrue(event.getValue().auditNotes().contains("CLM-2026-000002"));
+        assertSame(policyholder, event.getValue().recipient());
+        assertTrue(event.getValue().notificationTitle().contains("duplicate"));
+        assertEquals("/claims/1", event.getValue().link());
     }
 
     @Test

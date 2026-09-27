@@ -1,6 +1,7 @@
 package com.medisure.hims.service;
 
 import com.medisure.hims.model.*;
+import com.medisure.hims.pattern.billing.BillingCycles;
 import com.medisure.hims.repository.DependentRepository;
 import com.medisure.hims.repository.PolicyRepository;
 import com.medisure.hims.util.CodeGenerator;
@@ -24,15 +25,17 @@ public class PolicyService {
     private final CodeGenerator codeGenerator;
     private final AuditService auditService;
     private final NotificationService notificationService;
+    private final BillingCycles billingCycles;
 
     public PolicyService(PolicyRepository policyRepository, DependentRepository dependentRepository,
                           CodeGenerator codeGenerator, AuditService auditService,
-                          NotificationService notificationService) {
+                          NotificationService notificationService, BillingCycles billingCycles) {
         this.policyRepository = policyRepository;
         this.dependentRepository = dependentRepository;
         this.codeGenerator = codeGenerator;
         this.auditService = auditService;
         this.notificationService = notificationService;
+        this.billingCycles = billingCycles;
     }
 
     public List<Policy> findAllFor(User currentUser) {
@@ -143,11 +146,8 @@ public class PolicyService {
         auditService.log("Dependent", dependentId, "REMOVED", actor, dependent.getFullName());
     }
 
+    /** Strategy pattern: the billing cycle strategy for this frequency decides the next due date. */
     private LocalDate nextDueDate(LocalDate from, PremiumFrequency frequency) {
-        return switch (frequency) {
-            case MONTHLY -> from.plusMonths(1);
-            case QUARTERLY -> from.plusMonths(3);
-            case ANNUAL -> from.plusYears(1);
-        };
+        return billingCycles.periodEnd(frequency, from);
     }
 }

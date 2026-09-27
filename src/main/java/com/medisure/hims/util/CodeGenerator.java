@@ -16,9 +16,19 @@ import java.time.Year;
  * The next number is derived from the highest code already issued for that prefix rather than
  * from a row count: counting breaks as soon as the sequence has gaps (deleted rows, or codes
  * seeded out of order), which would hand out a number that is already taken.
+ *
+ * <p>Singleton pattern: exactly one CodeGenerator may exist in the running application. Two
+ * instances could read the same highest code at the same moment and issue the same number twice,
+ * which is why every method that hands out a code is synchronized on that one instance. The
+ * single instance is created and shared by Spring, whose beans are singleton scoped by default;
+ * the guard in the constructor makes that guarantee explicit and fails fast if a second instance
+ * is ever created. {@link #getInstance()} gives the classic global access point to it.</p>
  */
 @Component
 public class CodeGenerator {
+
+    /** The one and only instance, kept for the global access point below. */
+    private static volatile CodeGenerator instance;
 
     private final UnderwritingApplicationRepository applicationRepository;
     private final PolicyRepository policyRepository;
@@ -27,9 +37,37 @@ public class CodeGenerator {
     public CodeGenerator(UnderwritingApplicationRepository applicationRepository,
                           PolicyRepository policyRepository,
                           ClaimRepository claimRepository) {
-        this.applicationRepository = applicationRepository;
-        this.policyRepository = policyRepository;
-        this.claimRepository = claimRepository;
+        synchronized (CodeGenerator.class) {
+            if (instance != null) {
+                throw new IllegalStateException(
+                        "CodeGenerator is a singleton: a second instance would issue duplicate codes");
+            }
+            this.applicationRepository = applicationRepository;
+            this.policyRepository = policyRepository;
+            this.claimRepository = claimRepository;
+            instance = this;
+        }
+    }
+
+    /**
+     * The global access point of the Singleton pattern, for the few places that cannot receive the
+     * generator by constructor injection.
+     */
+    public static CodeGenerator getInstance() {
+        if (instance == null) {
+            throw new IllegalStateException("CodeGenerator has not been created yet");
+        }
+        return instance;
+    }
+
+    /** The current instance, or null before one is created; for tests only. */
+    static synchronized CodeGenerator peekInstance() {
+        return instance;
+    }
+
+    /** Puts an instance back, so a test can prove the guard works and then restore what it found. */
+    static synchronized void restoreInstance(CodeGenerator previous) {
+        instance = previous;
     }
 
     public synchronized String nextApplicationCode() {

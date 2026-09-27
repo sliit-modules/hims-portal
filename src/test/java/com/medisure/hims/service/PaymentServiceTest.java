@@ -1,6 +1,7 @@
 package com.medisure.hims.service;
 
 import com.medisure.hims.model.*;
+import com.medisure.hims.pattern.billing.*;
 import com.medisure.hims.repository.PaymentRepository;
 import com.medisure.hims.repository.PolicyRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,11 +10,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -35,6 +38,11 @@ class PaymentServiceTest {
 
     @Mock
     private NotificationService notificationService;
+
+    // the real strategies: the billing cycle is behaviour under test, not a collaborator to fake
+    @Spy
+    private BillingCycles billingCycles = new BillingCycles(List.of(
+            new MonthlyBillingCycle(), new QuarterlyBillingCycle(), new AnnualBillingCycle()));
 
     @InjectMocks
     private PaymentService paymentService;

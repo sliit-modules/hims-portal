@@ -1,6 +1,7 @@
 package com.medisure.hims.service;
 
 import com.medisure.hims.model.*;
+import com.medisure.hims.pattern.billing.BillingCycles;
 import com.medisure.hims.repository.PaymentRepository;
 import com.medisure.hims.repository.PolicyRepository;
 import org.springframework.security.access.AccessDeniedException;
@@ -21,13 +22,16 @@ public class PaymentService {
     private final PolicyRepository policyRepository;
     private final AuditService auditService;
     private final NotificationService notificationService;
+    private final BillingCycles billingCycles;
 
     public PaymentService(PaymentRepository paymentRepository, PolicyRepository policyRepository,
-                           AuditService auditService, NotificationService notificationService) {
+                           AuditService auditService, NotificationService notificationService,
+                           BillingCycles billingCycles) {
         this.paymentRepository = paymentRepository;
         this.policyRepository = policyRepository;
         this.auditService = auditService;
         this.notificationService = notificationService;
+        this.billingCycles = billingCycles;
     }
 
     public List<Payment> findAllFor(User currentUser) {
@@ -51,11 +55,8 @@ public class PaymentService {
 
     public Payment makePayment(Policy policy, BigDecimal amount, PaymentMethod method, boolean autoPay, User actor) {
         LocalDate periodStart = policy.getNextDueDate();
-        LocalDate periodEnd = switch (policy.getPremiumFrequency()) {
-            case MONTHLY -> periodStart.plusMonths(1);
-            case QUARTERLY -> periodStart.plusMonths(3);
-            case ANNUAL -> periodStart.plusYears(1);
-        };
+        // Strategy pattern: the billing cycle for this frequency works the period out for us.
+        LocalDate periodEnd = billingCycles.periodEnd(policy.getPremiumFrequency(), periodStart);
 
         Payment payment = new Payment();
         payment.setPolicy(policy);
