@@ -1,6 +1,9 @@
 package com.medisure.hims.service;
 
 import com.medisure.hims.model.*;
+import com.medisure.hims.pattern.event.ClaimDecidedEvent;
+import com.medisure.hims.pattern.event.ClaimVoidedEvent;
+import com.medisure.hims.pattern.event.DomainEvents;
 import com.medisure.hims.repository.ClaimRepository;
 import com.medisure.hims.util.CodeGenerator;
 import org.springframework.security.access.AccessDeniedException;
@@ -23,13 +26,16 @@ public class ClaimService {
     private final CodeGenerator codeGenerator;
     private final AuditService auditService;
     private final NotificationService notificationService;
+    private final DomainEvents domainEvents;
 
     public ClaimService(ClaimRepository claimRepository, CodeGenerator codeGenerator, AuditService auditService,
-                        NotificationService notificationService) {
+                        NotificationService notificationService,
+                         DomainEvents domainEvents) {
         this.claimRepository = claimRepository;
         this.codeGenerator = codeGenerator;
         this.auditService = auditService;
         this.notificationService = notificationService;
+        this.domainEvents = domainEvents;
     }
 
     public List<Claim> findAllFor(User currentUser) {
@@ -168,11 +174,8 @@ public class ClaimService {
         claim.setStatus(status);
         claim.setDecisionNotes(notes);
         Claim saved = claimRepository.save(claim);
-        auditService.log("Claim", saved.getId(), "DECIDED:" + status, actor, notes);
-        notificationService.notify(saved.getClaimant(),
-                "Claim " + saved.getClaimCode() + (status == ClaimStatus.APPROVED ? " approved" : " rejected"),
-                notes == null || notes.isBlank() ? "Open the claim for details." : notes,
-                "/claims/" + saved.getId());
+        // Observer pattern: the decision is announced once; the audit and notification observers react.
+        domainEvents.publish(new ClaimDecidedEvent(saved, status, notes, actor));
         return saved;
     }
 
@@ -252,12 +255,8 @@ public class ClaimService {
         claim.setDuplicateOf(original);
         claim.setDecisionNotes(reason.trim());
         Claim saved = claimRepository.save(claim);
-        auditService.log("Claim", saved.getId(), "VOIDED", actor,
-                "Duplicate of " + original.getClaimCode() + ": " + reason.trim());
-        notificationService.notify(saved.getClaimant(),
-                "Claim " + saved.getClaimCode() + " closed as a duplicate",
-                "It repeats claim " + original.getClaimCode() + ", which is still being handled. " + reason.trim(),
-                "/claims/" + saved.getId());
+        // Observer pattern: one event, two reactions (audit trail and telling the member).
+        domainEvents.publish(new ClaimVoidedEvent(saved, original, reason.trim(), actor));
         return saved;
     }
 
